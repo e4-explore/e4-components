@@ -17,8 +17,8 @@ const preview: Preview = {
         title: 'Theme',
         icon: 'paintbrush',
         items: [
-          { value: 'wireframe', title: '✏️ Wireframe' },
-          { value: 'brand', title: '🎨 Branded demo' },
+          { value: 'wireframe', title: 'Wireframe' },
+          { value: 'brand', title: 'Branded demo' },
         ],
         dynamicTitle: true,
       },
@@ -29,8 +29,8 @@ const preview: Preview = {
         title: 'Mode',
         icon: 'circlehollow',
         items: [
-          { value: 'light', title: '☀️ Light' },
-          { value: 'dark', title: '🌙 Dark' },
+          { value: 'light', title: 'Light' },
+          { value: 'dark', title: 'Dark' },
         ],
         dynamicTitle: true,
       },
