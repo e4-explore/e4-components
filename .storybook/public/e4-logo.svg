@@ -1,0 +1,20 @@
+<svg width="236" height="64" viewBox="0 0 236 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="E4 Explore">
+  <!-- hard offset shadow behind the badge (wireframe card style) -->
+  <rect x="9" y="13" width="62" height="46" rx="11" fill="#2A2A33" />
+  <!-- badge -->
+  <rect x="4" y="8" width="62" height="46" rx="11" fill="#FFFFFF" stroke="#2A2A33" stroke-width="2.5" />
+  <!-- hand-drawn "E" (wobbly monoline strokes) -->
+  <g stroke="#2A2A33" stroke-width="3.2" stroke-linecap="round" fill="none">
+    <path d="M18 19 Q17.2 30.5 18 43" />
+    <path d="M18 19 Q25 18.2 32 19.4" />
+    <path d="M18 31 Q23.5 30.2 29 31" />
+    <path d="M18 43 Q25 44 32 43.2" />
+    <!-- hand-drawn "4" -->
+    <path d="M49 19 Q43.5 27.5 39 34.6 L56 34.2" />
+    <path d="M51.5 20 Q51.8 31 52 45" />
+  </g>
+  <!-- wordmark -->
+  <text x="78" y="44" font-family="'Shantell Sans','Comic Sans MS','Chalkboard SE',cursive" font-size="29" font-weight="700" letter-spacing="0.5" fill="#2A2A33">explore</text>
+  <!-- sketchy underline -->
+  <path d="M79 53 Q135 55 195 52.5" stroke="#B3B3BC" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 6" fill="none" />
+</svg>

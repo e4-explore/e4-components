@@ -1,0 +1,18 @@
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<script>
+  // Storybook hardcodes the "⋅ Storybook" tab-title suffix; keep it on-brand.
+  (function () {
+    var rebrand = function () {
+      if (document.title.indexOf('Storybook') !== -1) {
+        document.title = document.title.replace(/Storybook/g, 'E4 Explore');
+      }
+    };
+    window.addEventListener('DOMContentLoaded', function () {
+      rebrand();
+      var titleEl = document.querySelector('title');
+      if (titleEl) {
+        new MutationObserver(rebrand).observe(titleEl, { childList: true });
+      }
+    });
+  })();
+</script>
