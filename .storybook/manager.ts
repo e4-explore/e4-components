@@ -3,7 +3,7 @@ import { create } from 'storybook/theming';
 
 const e4Theme = create({
   base: 'light',
-  brandTitle: 'E4 Explore',
+  brandTitle: 'E4 Explorebook',
   brandUrl: 'https://github.com/ethanphilipgrove-dot',
   brandImage: 'e4-logo.svg',
   brandTarget: '_blank',
