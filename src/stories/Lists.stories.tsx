@@ -10,6 +10,7 @@ import { Avatar } from '../components/Avatar';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { Icon } from '../icons/Icon';
 import { useToast } from '../components/Toast';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -109,9 +110,7 @@ export const Reorderable: StoryObj = {
             <Box pb="sm" style={{ height: 72 }}>
               <Card flat={!isActive} p="md" style={{ flex: 1, justifyContent: 'center' }}>
                 <Row>
-                  <Text color="inkFaint" style={{ fontSize: 18, lineHeight: 22 }}>
-                    ⠿
-                  </Text>
+                  <Icon name="grip" size={18} color="inkFaint" />
                   <Box flex={1} ml="sm">
                     <Text variant="label" weight="medium">
                       {item.title}

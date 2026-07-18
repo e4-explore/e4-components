@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
+import { Icon, type IconName } from '../icons/Icon';
 import { settle } from '../motion';
 
 export type ToastTone = 'neutral' | 'success' | 'danger';
@@ -21,10 +22,10 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | null>(null);
 
-const TONE_GLYPH: Record<ToastTone, string> = {
-  neutral: '✎',
-  success: '✓',
-  danger: '✕',
+const TONE_ICON: Record<ToastTone, IconName> = {
+  neutral: 'edit',
+  success: 'check',
+  danger: 'close',
 };
 
 function ToastCard({ toast }: { toast: ToastRecord }) {
@@ -53,9 +54,7 @@ function ToastCard({ toast }: { toast: ToastRecord }) {
         shadow="card"
         style={{ borderWidth: theme.borders.regular, borderColor: theme.colors.border }}
       >
-        <Text weight="bold" style={{ color: toneColor }}>
-          {TONE_GLYPH[toast.tone]}
-        </Text>
+        <Icon name={TONE_ICON[toast.tone]} size={16} color={toneColor} />
         <Text variant="label">{toast.message}</Text>
       </Row>
     </Animated.View>

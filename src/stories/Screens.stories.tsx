@@ -13,6 +13,7 @@ import { InlineEdit } from '../components/InlineEdit';
 import { DraggableList } from '../components/DraggableList';
 import { ProgressBar } from '../components/ProgressBar';
 import { Divider } from '../components/Divider';
+import { Icon } from '../icons/Icon';
 import { useToast } from '../components/Toast';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -76,7 +77,7 @@ export const TrainingPlan: StoryObj = {
               <Box pb="sm" style={{ height: 64 }}>
                 <Card flat={!isActive} p="sm" px="md" style={{ flex: 1, justifyContent: 'center' }}>
                   <Row>
-                    <Text color="inkFaint">⠿</Text>
+                    <Icon name="grip" size={16} color="inkFaint" />
                     <Box flex={1} ml="sm">
                       <Text variant="label" weight="medium">{item.title}</Text>
                     </Box>
@@ -91,9 +92,9 @@ export const TrainingPlan: StoryObj = {
           active={tab}
           onChange={setTab}
           tabs={[
-            { key: 'plan', label: 'Plan', icon: '✎' },
-            { key: 'stats', label: 'Stats', icon: '▤' },
-            { key: 'me', label: 'Me', icon: '☺' },
+            { key: 'plan', label: 'Plan', icon: 'edit' },
+            { key: 'stats', label: 'Stats', icon: 'chart' },
+            { key: 'me', label: 'Me', icon: 'smile' },
           ]}
         />
       </Box>

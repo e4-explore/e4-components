@@ -2,6 +2,9 @@ import type { Theme } from './tokens';
 import { wireframeFonts } from './fonts';
 
 const ink = '#2A2A33';
+// Deliberately a different hue (navy) from `ink`/`shadow` so a primary button
+// doesn't visually fuse with its own cast shadow.
+const primary = '#232A45';
 
 /**
  * The default E4 theme: intentional wireframe. Grayscale "paper & ink",
@@ -20,7 +23,7 @@ export const wireframe: Theme = {
     inkFaint: '#B3B3BC',
     border: ink,
     borderStrong: ink,
-    primary: ink,
+    primary,
     onPrimary: '#FAFAF7',
     accent: '#4B7BFF',
     success: '#2F9E63',

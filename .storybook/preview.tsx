@@ -1,12 +1,12 @@
 import React from 'react';
 import type { Preview } from '@storybook/react-native-web-vite';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, ToastProvider, Box, wireframe } from '../src';
-import { brandTheme } from './brandTheme';
+import { ThemeProvider, ToastProvider, Box, wireframe, wireframeDark } from '../src';
+import { brandTheme, brandThemeDark } from './brandTheme';
 
-const themes = {
-  wireframe,
-  brand: brandTheme,
+const themesByMode = {
+  wireframe: { light: wireframe, dark: wireframeDark },
+  brand: { light: brandTheme, dark: brandThemeDark },
 };
 
 const preview: Preview = {
@@ -23,13 +23,28 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    mode: {
+      description: 'Color scheme',
+      toolbar: {
+        title: 'Mode',
+        icon: 'circlehollow',
+        items: [
+          { value: 'light', title: '☀️ Light' },
+          { value: 'dark', title: '🌙 Dark' },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     theme: 'wireframe',
+    mode: 'light',
   },
   decorators: [
     (Story, context) => {
-      const theme = themes[(context.globals.theme as keyof typeof themes) ?? 'wireframe'];
+      const themeKey = (context.globals.theme as keyof typeof themesByMode) ?? 'wireframe';
+      const modeKey = (context.globals.mode as 'light' | 'dark') ?? 'light';
+      const theme = themesByMode[themeKey][modeKey];
       return (
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider theme={theme}>

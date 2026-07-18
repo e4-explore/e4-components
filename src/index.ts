@@ -2,6 +2,7 @@
 export { ThemeProvider, useTheme } from './theme/ThemeProvider';
 export { createTheme } from './theme/createTheme';
 export { wireframe } from './theme/wireframe';
+export { wireframeDark } from './theme/wireframeDark';
 export { wireframeFonts, systemFonts } from './theme/fonts';
 export type {
   Theme,
@@ -21,6 +22,10 @@ export type {
 
 // Motion
 export { settle, enter, exit } from './motion';
+
+// Icons
+export { Icon } from './icons/Icon';
+export type { IconName, IconProps } from './icons/Icon';
 
 // Primitives
 export { Box, useBoxStyle, splitBoxProps, resolveColor, resolveSpace, resolveRadius } from './primitives/Box';

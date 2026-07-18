@@ -6,6 +6,7 @@ import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
 import { Expandable } from './Expandable';
+import { Icon } from '../icons/Icon';
 
 export interface AccordionItem {
   key: string;
@@ -32,9 +33,7 @@ function Chevron({ open }: { open: boolean }) {
   }));
   return (
     <Animated.View style={style}>
-      <Text color="inkMuted" style={{ fontSize: 14, lineHeight: 17 }}>
-        ▶
-      </Text>
+      <Icon name="chevronRight" size={14} color="inkMuted" />
     </Animated.View>
   );
 }

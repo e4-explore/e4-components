@@ -74,6 +74,18 @@ const brand = createTheme({
 
 `createTheme` deep-merges over the wireframe base — override only what changes. See `.storybook/brandTheme.ts` for a complete example, and use the **theme toolbar toggle in Storybook** to preview any component in both.
 
+### Dark mode
+
+`wireframeDark` is the "chalkboard" companion to `wireframe` — same face and hard offset shadows, but ink/paper swap (chalk-white lines on near-black, so the shadow reads as a soft glow):
+
+```tsx
+import { wireframeDark, ThemeProvider } from 'e4-components';
+
+<ThemeProvider theme={wireframeDark}>…</ThemeProvider>
+```
+
+Storybook has a separate **Mode toolbar toggle** (☀️/🌙) alongside the theme toggle, so any theme × light/dark combination is previewable.
+
 ## Storybook
 
 ```sh
@@ -91,6 +103,7 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 - **Inline** — `InlineEdit` (tap-to-edit, pixel-stable swap), `Accordion`, `Expandable` (the measured-height spring engine)
 - **Lists & data** — `List`/`ListItem` (animated add/remove), `DraggableList` (long-press lift, spring reorder, edge auto-scroll), `Table`, `EmptyState`, `Skeleton`, `ProgressBar`
 - **App shell** — `Header`, `TabBar` (sliding indicator), `BottomSheet` (pan-to-dismiss), `ToastProvider`/`useToast`
+- **Icons** — `Icon` (`chevronLeft/Right/Down`, `check`, `close`, `grip`, `home`, `search`, `chart`, `smile`, `edit`) — built from plain Views (rotated bars, border-corner chevrons, dot grids), not SVG, so no extra native dependency
 - **Motion** — shared spring presets (`snappy` / `gentle` / `bouncy`) and `settle`/`enter`/`exit` layout transitions
 
 ## Design principles
@@ -105,6 +118,5 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 - Cross-container drag (kanban) via a global `DragProvider`
 - Variable-height rows in `DraggableList`
 - Haptics hook (expo-haptics, optional)
-- Dark wireframe theme ("chalkboard")
 - `npx create-e4-app` scaffold with a pre-wired theme file
 - Publish Storybook to a shared URL; visual regression via Chromatic

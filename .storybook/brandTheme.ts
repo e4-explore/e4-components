@@ -51,3 +51,27 @@ export const brandTheme = createTheme({
     },
   },
 });
+
+/** Dark companion for the branded demo theme, showing the same brand tokens flipped to a dark surface. */
+export const brandThemeDark = createTheme(
+  {
+    name: 'demo-brand-dark',
+    dark: true,
+    colors: {
+      background: '#0B1220',
+      surface: '#121B2E',
+      surfaceAlt: '#1B2740',
+      ink: '#EAF0FF',
+      inkMuted: '#93A2C0',
+      inkFaint: '#546080',
+      border: '#2A3652',
+      borderStrong: '#EAF0FF',
+      primary: '#4C8DFF',
+      onPrimary: '#08101F',
+      accent: '#6FA4FF',
+      overlay: 'rgba(3, 7, 18, 0.6)',
+      shadow: 'rgba(0, 0, 0, 0.6)',
+    },
+  },
+  brandTheme,
+);

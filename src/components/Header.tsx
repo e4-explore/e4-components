@@ -4,6 +4,7 @@ import { Box } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row, Spacer } from '../primitives/Stack';
 import { Pressable } from '../primitives/Pressable';
+import { Icon } from '../icons/Icon';
 
 export interface HeaderProps {
   title: string;
@@ -34,9 +35,7 @@ export function Header({ title, onBack, left, right }: HeaderProps) {
           onPress={onBack}
           style={{ padding: theme.spacing.xs }}
         >
-          <Text weight="bold" style={{ fontSize: 22, lineHeight: 26 }}>
-            ‹
-          </Text>
+          <Icon name="chevronLeft" size={20} />
         </Pressable>
       ) : (
         left

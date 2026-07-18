@@ -3,6 +3,7 @@ import { Image, type ImageSourcePropType } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
 import { Text } from '../primitives/Text';
+import { Icon } from '../icons/Icon';
 
 export interface AvatarProps {
   /** Full name — initials are derived. */
@@ -45,9 +46,7 @@ export function Avatar({ name, source, size = 40 }: AvatarProps) {
           {initialsOf(name)}
         </Text>
       ) : (
-        <Text color="inkFaint" style={{ fontSize: size * 0.5, lineHeight: size * 0.62 }}>
-          ✕
-        </Text>
+        <Icon name="close" size={size * 0.42} color="inkFaint" />
       )}
     </Box>
   );

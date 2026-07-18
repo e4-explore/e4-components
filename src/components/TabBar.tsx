@@ -6,12 +6,13 @@ import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
+import { Icon, type IconName } from '../icons/Icon';
 
 export interface TabItem<T extends string> {
   key: T;
   label: string;
-  /** Optional glyph shown above the label. */
-  icon?: string;
+  /** Optional icon shown above the label. */
+  icon?: IconName;
 }
 
 export interface TabBarProps<T extends string> {
@@ -78,11 +79,7 @@ export function TabBar<T extends string>({ tabs, active, onChange }: TabBarProps
               }
             >
               <Box py="xs" align="center" gap="xxs">
-                {tab.icon ? (
-                  <Text style={{ fontSize: 18, lineHeight: 22 }} color={isActive ? 'ink' : 'inkFaint'}>
-                    {tab.icon}
-                  </Text>
-                ) : null}
+                {tab.icon ? <Icon name={tab.icon} size={18} color={isActive ? 'ink' : 'inkFaint'} /> : null}
                 <Text
                   variant="caption"
                   weight={isActive ? 'bold' : 'medium'}

@@ -5,6 +5,7 @@ import { Box, type BoxProps } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row, Spacer } from '../primitives/Stack';
 import { Pressable } from '../primitives/Pressable';
+import { Icon } from '../icons/Icon';
 import { settle, enter, exit } from '../motion';
 
 export interface ListItemProps {
@@ -32,11 +33,7 @@ export function ListItem({ title, subtitle, left, right, chevron, onPress }: Lis
         ) : null}
       </Box>
       {right}
-      {chevron ? (
-        <Text color="inkFaint" style={{ fontSize: 16, lineHeight: 20 }}>
-          ›
-        </Text>
-      ) : null}
+      {chevron ? <Icon name="chevronRight" size={15} color="inkFaint" /> : null}
     </Row>
   );
 

@@ -38,10 +38,10 @@ export const Tabs: StoryObj = {
           active={tab}
           onChange={setTab}
           tabs={[
-            { key: 'home', label: 'Home', icon: '⌂' },
-            { key: 'search', label: 'Search', icon: '⌕' },
-            { key: 'stats', label: 'Stats', icon: '▤' },
-            { key: 'me', label: 'Me', icon: '☺' },
+            { key: 'home', label: 'Home', icon: 'home' },
+            { key: 'search', label: 'Search', icon: 'search' },
+            { key: 'stats', label: 'Stats', icon: 'chart' },
+            { key: 'me', label: 'Me', icon: 'smile' },
           ]}
         />
         <Text align="center" color="inkMuted">

@@ -4,6 +4,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
+import { Icon } from '../icons/Icon';
 
 export interface CheckboxProps {
   checked: boolean;
@@ -47,9 +48,7 @@ export function Checkbox({ checked, onChange, label, disabled }: CheckboxProps) 
           }}
         >
           <Animated.View style={markStyle}>
-            <Text weight="bold" color="onPrimary" style={{ fontSize: 15, lineHeight: 18 }}>
-              ✓
-            </Text>
+            <Icon name="check" size={15} color="onPrimary" />
           </Animated.View>
         </Row>
         {label ? <Text>{label}</Text> : null}

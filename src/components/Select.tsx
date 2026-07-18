@@ -6,6 +6,7 @@ import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
 import { Expandable } from './Expandable';
+import { Icon } from '../icons/Icon';
 
 export interface SelectOption<T extends string> {
   value: T;
@@ -72,9 +73,7 @@ export function Select<T extends string>({
         <Row px="md" justify="space-between" style={{ minHeight: 46 }}>
           <Text color={selected ? 'ink' : 'inkFaint'}>{selected?.label ?? placeholder}</Text>
           <Animated.View style={chevronStyle}>
-            <Text color="inkMuted" style={{ fontSize: 13, lineHeight: 16 }}>
-              ▼
-            </Text>
+            <Icon name="chevronDown" size={14} color="inkMuted" />
           </Animated.View>
         </Row>
       </Pressable>
@@ -103,7 +102,7 @@ export function Select<T extends string>({
               >
                 <Row px="md" py="sm" justify="space-between">
                   <Text weight={isSelected ? 'bold' : 'regular'}>{option.label}</Text>
-                  {isSelected ? <Text weight="bold">✓</Text> : null}
+                  {isSelected ? <Icon name="check" size={15} /> : null}
                 </Row>
               </Pressable>
             );
