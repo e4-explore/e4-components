@@ -14,8 +14,11 @@ const e4Theme = create({
   appBg: '#FAFAF7',
   appContentBg: '#FAFAF7',
   appPreviewBg: '#FAFAF7',
-  appBorderColor: '#E2E2DA',
-  appBorderRadius: 10,
+  appBorderColor: '#2A2A33',
+  appBorderRadius: 12,
+
+  fontBase: "'Shantell Sans', 'Comic Sans MS', cursive",
+  fontCode: "'Menlo', 'Consolas', monospace",
 
   textColor: '#2A2A33',
   textMutedColor: '#6E6E78',

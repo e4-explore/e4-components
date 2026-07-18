@@ -1,4 +1,24 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;500;700&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* Stable Storybook DOM hooks (confirmed against the live manager): a dashed
+     sketch-style rule above the story canvas, and playful rounded button
+     hovers throughout the chrome. */
+  #storybook-preview-wrapper {
+    border-top: 2px dashed #b3b3bc;
+  }
+  #root button:hover:not([disabled]) {
+    border-radius: 8px;
+  }
+  #storybook-explorer-searchfield {
+    font-family: 'Shantell Sans', 'Comic Sans MS', cursive;
+  }
+</style>
 <script>
   // Storybook hardcodes the "⋅ Storybook" tab-title suffix; keep it on-brand.
   (function () {
