@@ -11,7 +11,7 @@ const chalk = '#F2F2ED';
  */
 export const wireframeDark = createTheme(
   {
-    name: 'wireframe-dark',
+    name: 'wireframe',
     dark: true,
     colors: {
       background: '#17171B',

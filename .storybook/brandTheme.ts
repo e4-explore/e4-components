@@ -55,7 +55,7 @@ export const brandTheme = createTheme({
 /** Dark companion for the branded demo theme, showing the same brand tokens flipped to a dark surface. */
 export const brandThemeDark = createTheme(
   {
-    name: 'demo-brand-dark',
+    name: 'demo-brand',
     dark: true,
     colors: {
       background: '#0B1220',
