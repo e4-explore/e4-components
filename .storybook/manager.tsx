@@ -146,7 +146,7 @@ function CreateAppLauncher() {
   }, [open, close]);
 
   return (
-    <div style={{ padding: '10px 12px 6px' }}>
+    <div>
       <button
         type="button"
         onClick={() => setOpen(true)}
