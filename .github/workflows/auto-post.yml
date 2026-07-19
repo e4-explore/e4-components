@@ -11,6 +11,13 @@
 # Escape hatch: to land a commit WITHOUT auto-posting about it (e.g. the commit
 # that adds this workflow), include `[skip post]` in the commit message. Normal
 # commits post as usual; release.yml still runs either way.
+#
+# If a local push is ever rejected (something landed on main first — the
+# release bot, another change), resolve it with `git pull --rebase`, not a
+# plain `git pull`. A merge commit's diff reflects whichever side wasn't
+# already on the branch, which can make the draft describe the wrong change;
+# `before-sha` below is a second line of defense against that, but rebasing
+# avoids creating the merge commit in the first place.
 name: Auto-post project update
 on:
   push:
@@ -20,6 +27,7 @@ on:
     inputs:
       sha: { required: true, type: string }
       dry-run: { required: false, type: boolean, default: false }
+      before-sha: { required: false, type: string, default: '' }
 permissions:
   contents: write
   pull-requests: read
@@ -46,4 +54,5 @@ jobs:
           homepage-url: https://e4-components.vercel.app
           routes: '["/?path=/story/welcome--start"]'
           sha: ${{ github.event.inputs.sha }}
+          before-sha: ${{ github.event.inputs.before-sha || github.event.before }}
           dry-run: ${{ github.event.inputs.dry-run }}
