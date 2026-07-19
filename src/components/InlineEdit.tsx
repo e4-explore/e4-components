@@ -48,12 +48,16 @@ export function InlineEdit({
   // A multiline TextInput renders as a <textarea> on web, which defaults to a
   // browser-chosen multi-row height taller than one line of text — pushing
   // the underline below where the single-line placeholder's dashed line
-  // sits. Pin it to exactly one line until real content grows it.
-  const singleLineHeight = v.lineHeight + theme.spacing.xxs * 2;
+  // sits. Pin it to exactly one line until real content grows it. RNW boxes
+  // are border-box, so the Text's auto height (which folds in its own
+  // border-bottom) only matches an explicit height here if that height
+  // accounts for the border too — otherwise the input renders `regular`
+  // pixels short and its border sits that much higher.
+  const singleLineHeight = v.lineHeight + theme.spacing.xxs * 2 + theme.borders.regular;
   const [inputHeight, setInputHeight] = useState(singleLineHeight);
 
   const onContentSizeChange = (e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) => {
-    setInputHeight(Math.max(singleLineHeight, e.nativeEvent.contentSize.height));
+    setInputHeight(Math.max(singleLineHeight, e.nativeEvent.contentSize.height + theme.borders.regular));
   };
 
   const commit = () => {
