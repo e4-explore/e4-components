@@ -4,7 +4,11 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+
+// This file is loaded as an ES module, so CJS's __dirname doesn't exist here.
+const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 const NAME_RE = /^[a-z0-9][a-z0-9-_]*$/i;
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -39,44 +43,50 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
   const chunks: Buffer[] = [];
   req.on('data', (c: Buffer) => chunks.push(c));
   req.on('end', () => {
-    let body: { name?: string; parentDir?: string; primary?: string; accent?: string };
+    // Any uncaught throw in this callback would crash the whole dev server
+    // (that's what an unguarded __dirname reference did) — keep it airtight.
     try {
-      body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    } catch {
-      return json(res, 400, { ok: false, error: 'Invalid JSON body' });
-    }
-
-    const name = (body.name ?? '').trim();
-    if (!NAME_RE.test(name)) {
-      return json(res, 400, { ok: false, error: 'App name must be alphanumeric (dashes/underscores allowed), e.g. golf-tracker.' });
-    }
-    for (const key of ['primary', 'accent'] as const) {
-      if (body[key] && !HEX_RE.test(body[key]!)) {
-        return json(res, 400, { ok: false, error: `${key} must be a hex color like #3355D9.` });
+      let body: { name?: string; parentDir?: string; primary?: string; accent?: string };
+      try {
+        body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      } catch {
+        return json(res, 400, { ok: false, error: 'Invalid JSON body' });
       }
-    }
 
-    let parentDir = (body.parentDir ?? '~').trim() || '~';
-    if (parentDir === '~' || parentDir.startsWith('~/')) {
-      parentDir = path.join(os.homedir(), parentDir.slice(1));
-    }
-    parentDir = path.resolve(parentDir);
-    if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
-      return json(res, 400, { ok: false, error: `Folder does not exist: ${parentDir}` });
-    }
-
-    const cli = path.resolve(__dirname, '../bin/create-e4-app.js');
-    const args = [cli, name];
-    if (body.primary) args.push('--primary', body.primary);
-    if (body.accent) args.push('--accent', body.accent);
-
-    execFile(process.execPath, args, { cwd: parentDir, timeout: 15000 }, (err, stdout, stderr) => {
-      if (err) {
-        const msg = (stderr || stdout || err.message).trim().replace(/^\s*✗\s*/m, '');
-        return json(res, 400, { ok: false, error: msg });
+      const name = (body.name ?? '').trim();
+      if (!NAME_RE.test(name)) {
+        return json(res, 400, { ok: false, error: 'App name must be alphanumeric (dashes/underscores allowed), e.g. golf-tracker.' });
       }
-      return json(res, 200, { ok: true, path: path.join(parentDir, name) });
-    });
+      for (const key of ['primary', 'accent'] as const) {
+        if (body[key] && !HEX_RE.test(body[key]!)) {
+          return json(res, 400, { ok: false, error: `${key} must be a hex color like #3355D9.` });
+        }
+      }
+
+      let parentDir = (body.parentDir ?? '~').trim() || '~';
+      if (parentDir === '~' || parentDir.startsWith('~/')) {
+        parentDir = path.join(os.homedir(), parentDir.slice(1));
+      }
+      parentDir = path.resolve(parentDir);
+      if (!fs.existsSync(parentDir) || !fs.statSync(parentDir).isDirectory()) {
+        return json(res, 400, { ok: false, error: `Folder does not exist: ${parentDir}` });
+      }
+
+      const cli = path.resolve(CONFIG_DIR, '../bin/create-e4-app.js');
+      const args = [cli, name];
+      if (body.primary) args.push('--primary', body.primary);
+      if (body.accent) args.push('--accent', body.accent);
+
+      execFile(process.execPath, args, { cwd: parentDir, timeout: 15000 }, (err, stdout, stderr) => {
+        if (err) {
+          const msg = (stderr || stdout || err.message).trim().replace(/^\s*✗\s*/m, '');
+          return json(res, 400, { ok: false, error: msg });
+        }
+        return json(res, 200, { ok: true, path: path.join(parentDir, name) });
+      });
+    } catch (e) {
+      return json(res, 500, { ok: false, error: e instanceof Error ? e.message : 'Internal error' });
+    }
   });
 };
 
