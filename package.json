@@ -11,7 +11,8 @@
   },
   "files": [
     "src",
-    "bin"
+    "bin",
+    "templates"
   ],
   "sideEffects": false,
   "scripts": {

@@ -163,7 +163,7 @@ function CreateAppLauncher() {
           cursor: 'pointer',
         }}
       >
-        Create Local App
+        Copy App Locally
       </button>
       {open ? createPortal(<CreateAppModal onClose={close} />, document.body) : null}
     </div>

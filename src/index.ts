@@ -111,6 +111,8 @@ export { FlowServicesProvider, useFlowServices } from './flows/FlowServices';
 export type { FlowServicesProviderProps } from './flows/FlowServices';
 export { createMockClients, MOCK_CODE } from './flows/clients/mock';
 export type { MockClientsOptions } from './flows/clients/mock';
+export { createSupabaseClients } from './flows/clients/supabase';
+export type { SupabaseClientsOptions, SupabaseLike } from './flows/clients/supabase';
 export { FlowError } from './flows/clients/types';
 export type {
   FlowClients,
@@ -134,6 +136,21 @@ export { ManageSubscriptionScreen } from './flows/billing/ManageSubscriptionScre
 export type { ManageSubscriptionScreenProps } from './flows/billing/ManageSubscriptionScreen';
 export { SettingsFlow } from './flows/settings/SettingsFlow';
 export type { SettingsFlowProps, SettingsStep } from './flows/settings/SettingsFlow';
+export {
+  ForceUpgradeScreen,
+  MaintenanceScreen,
+  OfflineBanner,
+} from './flows/ops/OpsScreens';
+export type {
+  ForceUpgradeScreenProps,
+  MaintenanceScreenProps,
+  OfflineBannerProps,
+} from './flows/ops/OpsScreens';
+export { LegalConsentScreen, TrackingConsentScreen } from './flows/legal/LegalScreens';
+export type {
+  LegalConsentScreenProps,
+  TrackingConsentScreenProps,
+} from './flows/legal/LegalScreens';
 export { OnboardingFlow } from './flows/onboarding/OnboardingFlow';
 export type {
   OnboardingFlowProps,
