@@ -12,6 +12,9 @@ const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 const NAME_RE = /^[a-z0-9][a-z0-9-_]*$/i;
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+// Flow packs the scaffolder understands; must match KNOWN_FLOWS in
+// bin/create-e4-app.js.
+const KNOWN_FLOWS = ['auth', 'onboarding', 'subscription', 'settings'];
 
 function isLoopback(req: IncomingMessage): boolean {
   const addr = req.socket.remoteAddress ?? '';
@@ -46,7 +49,13 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
     // Any uncaught throw in this callback would crash the whole dev server
     // (that's what an unguarded __dirname reference did) — keep it airtight.
     try {
-      let body: { name?: string; parentDir?: string; primary?: string; accent?: string };
+      let body: {
+        name?: string;
+        parentDir?: string;
+        primary?: string;
+        accent?: string;
+        flows?: string[];
+      };
       try {
         body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       } catch {
@@ -63,6 +72,13 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
         }
       }
 
+      const flows = Array.isArray(body.flows) ? body.flows : [];
+      for (const flow of flows) {
+        if (!KNOWN_FLOWS.includes(flow)) {
+          return json(res, 400, { ok: false, error: `Unknown flow "${flow}".` });
+        }
+      }
+
       let parentDir = (body.parentDir ?? '~').trim() || '~';
       if (parentDir === '~' || parentDir.startsWith('~/')) {
         parentDir = path.join(os.homedir(), parentDir.slice(1));
@@ -76,6 +92,7 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
       const args = [cli, name];
       if (body.primary) args.push('--primary', body.primary);
       if (body.accent) args.push('--accent', body.accent);
+      if (flows.length > 0) args.push('--flows', flows.join(','));
 
       execFile(process.execPath, args, { cwd: parentDir, timeout: 15000 }, (err, stdout, stderr) => {
         if (err) {

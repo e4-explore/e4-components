@@ -8,6 +8,8 @@ Base component library for all E4 projects, built with React Native (iOS, Androi
 
 ```sh
 npx github:e4-explore/e4-components my-app
+# optionally pre-wire complete journeys (see "Flows" below):
+npx github:e4-explore/e4-components my-app --flows auth,onboarding,subscription,settings
 cd my-app
 npm install
 npx expo start
@@ -123,6 +125,25 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 - **Overlay** — `OverlayHost`/`useOverlay` (measured-position floating panels that escape any ancestor's stacking context — powers Select, available for building your own popovers/tooltips)
 - **Icons** — `Icon` (`chevronLeft/Right/Down`, `check`, `close`, `grip`, `home`, `search`, `chart`, `smile`, `edit`) — built from plain Views (rotated bars, border-corner chevrons, dot grids), not SVG, so no extra native dependency
 - **Motion** — shared spring presets (`snappy` / `gentle` / `bouncy`) and `settle`/`enter`/`exit` layout transitions
+
+## Flows
+
+Beyond components, the library ships complete journeys — browsable under **Flows** in Storybook (fully clickable against a mock backend) and scaffoldable into a new app via the Create app button or `--flows`:
+
+- **Auth** — `AuthFlow`: sign in, sign up, 6-digit email verification (`CodeInput`), forgot/reset password, session hand-off via `onAuthenticated`. Delete account ships in Settings (an App Store requirement when you have accounts).
+- **Onboarding** — `OnboardingFlow`: welcome slides, name/avatar capture, permission priming ("ask before the OS asks").
+- **Subscription** — `PaywallScreen` (tier picker, monthly/annual, restore) + `ManageSubscriptionScreen` (status, change plan, inline cancel confirm).
+- **Settings** — `SettingsFlow`: account hub, edit profile, change password/email, notification preferences, subscription entry, sign out, inline delete-account confirm.
+
+Flows never talk to a backend directly. They call the `AuthClient` / `ProfileClient` / `BillingClient` interfaces provided through `FlowServicesProvider`; `createMockClients()` is the zero-setup in-memory implementation (every "emailed" code is `123456`), and real adapters (Supabase, RevenueCat/Stripe) drop in without touching flow code. Screens only read colors/fonts through the theme, so your `theme.ts` restyles every flow while library updates keep flowing in via the semver range + Renovate.
+
+Scaffold with any combination (settings requires auth):
+
+```sh
+npx github:e4-explore/e4-components my-app --flows auth,onboarding,subscription,settings
+```
+
+The generated `App.tsx` composes the selected packs gate by gate: auth → onboarding → paywall → home ⇄ settings.
 
 ## Design principles
 

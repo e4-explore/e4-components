@@ -8,6 +8,7 @@ import { Badge } from '../components/Badge';
 import { Divider } from '../components/Divider';
 import { Input } from '../components/Input';
 import { FormField } from '../components/FormField';
+import { Checkbox } from '../components/Checkbox';
 import { Button } from '../components/Button';
 import { Icon } from '../icons/Icon';
 import { useToast } from '../components/Toast';
@@ -32,10 +33,11 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 type Mode = 'probing' | 'local' | 'static';
 
-function buildCommands(name: string, primary: string, accent: string): string {
+function buildCommands(name: string, primary: string, accent: string, flows: string[]): string {
   const flags =
     (primary && primary !== '#3355D9' ? ` --primary "${primary}"` : '') +
-    (accent && accent !== '#4B7BFF' ? ` --accent "${accent}"` : '');
+    (accent && accent !== '#4B7BFF' ? ` --accent "${accent}"` : '') +
+    (flows.length > 0 ? ` --flows ${flows.join(',')}` : '');
   return [
     `npx github:e4-explore/e4-components ${name || 'my-app'}${flags}`,
     `cd ${name || 'my-app'}`,
@@ -102,6 +104,12 @@ export const Start: StoryObj = {
     const [primary, setPrimary] = useState('#3355D9');
     const [accent, setAccent] = useState('#4B7BFF');
     const [parentDir, setParentDir] = useState('~');
+    const [flows, setFlows] = useState<Record<string, boolean>>({
+      auth: false,
+      onboarding: false,
+      subscription: false,
+      settings: false,
+    });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [createdPath, setCreatedPath] = useState<string | null>(null);
@@ -125,6 +133,19 @@ export const Start: StoryObj = {
       };
     }, []);
 
+    // Stable gate order: auth → onboarding → subscription → settings.
+    const selectedFlows = ['auth', 'onboarding', 'subscription', 'settings'].filter(
+      (f) => flows[f],
+    );
+    const toggleFlow = (flow: string) => (checked: boolean) =>
+      setFlows((prev) => ({
+        ...prev,
+        [flow]: checked,
+        // Settings manages the account, so it drags auth in with it.
+        ...(flow === 'settings' && checked ? { auth: true } : {}),
+        ...(flow === 'auth' && !checked ? { settings: false } : {}),
+      }));
+
     const nameError =
       name.length > 0 && !NAME_RE.test(name)
         ? 'Letters, numbers, dashes and underscores only — e.g. golf-tracker'
@@ -140,7 +161,7 @@ export const Start: StoryObj = {
         const res = await fetch('/api/create-app', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, parentDir, primary, accent }),
+          body: JSON.stringify({ name, parentDir, primary, accent, flows: selectedFlows }),
         });
         const body = await res.json();
         if (body.ok) {
@@ -232,6 +253,33 @@ export const Start: StoryObj = {
                 <Input value={parentDir} onChangeText={setParentDir} autoCapitalize="none" />
               </FormField>
             ) : null}
+            <FormField
+              label="Flows"
+              hint="Ready-made journeys composed into the app (auth → onboarding → paywall → home ⇄ settings), running on a mock backend until you connect a real one. Browse them under Flows in the sidebar."
+            >
+              <Stack gap="sm">
+                <Checkbox
+                  checked={flows.auth}
+                  onChange={toggleFlow('auth')}
+                  label="Auth — sign in, sign up, verify email, reset password"
+                />
+                <Checkbox
+                  checked={flows.onboarding}
+                  onChange={toggleFlow('onboarding')}
+                  label="Onboarding — welcome slides, profile, permission priming"
+                />
+                <Checkbox
+                  checked={flows.subscription}
+                  onChange={toggleFlow('subscription')}
+                  label="Subscription — paywall, tier picker, manage & cancel"
+                />
+                <Checkbox
+                  checked={flows.settings}
+                  onChange={toggleFlow('settings')}
+                  label="Settings — account hub, change password/email, delete account"
+                />
+              </Stack>
+            </FormField>
           </Stack>
         </Card>
 
@@ -259,7 +307,7 @@ export const Start: StoryObj = {
         {mode !== 'local' ? (
           <Stack gap="sm">
             <Divider label="run these in your terminal" />
-            <CommandBlock commands={buildCommands(name, primary, accent)} />
+            <CommandBlock commands={buildCommands(name, primary, accent, selectedFlows)} />
             <Text variant="caption" color="inkFaint">
               Tip: run the first command from the folder where you keep projects (not inside another
               repo). Then press i for iOS, a for Android, or w for web.

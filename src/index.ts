@@ -103,3 +103,41 @@ export { ToastProvider, useToast } from './components/Toast';
 export type { ToastTone } from './components/Toast';
 export { Filter } from './components/Filter';
 export type { FilterProps, FilterOption } from './components/Filter';
+
+// Flows — full journeys (auth, billing, …) built from the components above.
+// Backends plug in through FlowServicesProvider; createMockClients() powers
+// prototypes and the Storybook demos.
+export { FlowServicesProvider, useFlowServices } from './flows/FlowServices';
+export type { FlowServicesProviderProps } from './flows/FlowServices';
+export { createMockClients, MOCK_CODE } from './flows/clients/mock';
+export type { MockClientsOptions } from './flows/clients/mock';
+export { FlowError } from './flows/clients/types';
+export type {
+  FlowClients,
+  FlowUser,
+  FlowSession,
+  AuthClient,
+  ProfileClient,
+  BillingClient,
+  BillingTier,
+  Entitlement,
+} from './flows/clients/types';
+export { StepTransition, useSteps } from './flows/StepTransition';
+export type { StepTransitionProps, StepDirection } from './flows/StepTransition';
+export { CodeInput } from './flows/components/CodeInput';
+export type { CodeInputProps } from './flows/components/CodeInput';
+export { AuthFlow } from './flows/auth/AuthFlow';
+export type { AuthFlowProps, AuthStep } from './flows/auth/AuthFlow';
+export { PaywallScreen } from './flows/billing/PaywallScreen';
+export type { PaywallScreenProps } from './flows/billing/PaywallScreen';
+export { ManageSubscriptionScreen } from './flows/billing/ManageSubscriptionScreen';
+export type { ManageSubscriptionScreenProps } from './flows/billing/ManageSubscriptionScreen';
+export { SettingsFlow } from './flows/settings/SettingsFlow';
+export type { SettingsFlowProps, SettingsStep } from './flows/settings/SettingsFlow';
+export { OnboardingFlow } from './flows/onboarding/OnboardingFlow';
+export type {
+  OnboardingFlowProps,
+  OnboardingSlide,
+  OnboardingProfile,
+  OnboardingPermission,
+} from './flows/onboarding/OnboardingFlow';
