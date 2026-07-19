@@ -26,6 +26,12 @@ export { settle, enter, exit } from './motion';
 // Overlay
 export { OverlayHost, useOverlay } from './overlay/OverlayHost';
 
+// Drag & drop (cross-list / kanban)
+export { DragProvider, useDrag } from './dnd/DragProvider';
+export type { DragProviderProps, DropResult, DropTarget, ColumnLayout } from './dnd/DragProvider';
+export { DragColumn } from './dnd/DragColumn';
+export type { DragColumnProps, DragColumnRenderInfo } from './dnd/DragColumn';
+
 // Icons
 export { Icon } from './icons/Icon';
 export type { IconName, IconProps } from './icons/Icon';
