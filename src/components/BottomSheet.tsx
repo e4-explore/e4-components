@@ -24,6 +24,14 @@ export interface BottomSheetProps {
 }
 
 const CLOSED_OFFSET = 600;
+// Fallback for tearing the sheet down after the close animation. Reanimated's
+// withSpring completion callback isn't reliably invoked on every target (it
+// silently never fires under react-native-web + Vite, at least) — without a
+// backstop, `mounted` sticks at `true` forever and the full-screen scrim
+// Pressable stays mounted (just invisible), permanently swallowing every tap
+// on the app. Sized comfortably longer than the spring should ever take to
+// settle; whichever of the callback or this timer fires first wins.
+const CLOSE_FALLBACK_MS = 600;
 
 /**
  * Bottom sheet that springs up from the edge; drag it down (or tap the scrim)
@@ -40,15 +48,22 @@ export function BottomSheet({ open, onClose, onClosed, children }: BottomSheetPr
       setMounted(true);
       offset.value = withSpring(0, theme.motion.springs.gentle);
       scrim.value = withTiming(1, { duration: theme.motion.durations.normal });
-    } else {
-      offset.value = withSpring(CLOSED_OFFSET, theme.motion.springs.gentle, (finished) => {
-        if (finished) {
-          runOnJS(setMounted)(false);
-          if (onClosed) runOnJS(onClosed)();
-        }
-      });
-      scrim.value = withTiming(0, { duration: theme.motion.durations.normal });
+      return;
     }
+
+    let closed = false;
+    const finishClose = () => {
+      if (closed) return;
+      closed = true;
+      setMounted(false);
+      onClosed?.();
+    };
+    offset.value = withSpring(CLOSED_OFFSET, theme.motion.springs.gentle, (finished) => {
+      if (finished) runOnJS(finishClose)();
+    });
+    scrim.value = withTiming(0, { duration: theme.motion.durations.normal });
+    const fallback = setTimeout(finishClose, CLOSE_FALLBACK_MS);
+    return () => clearTimeout(fallback);
     // `onClosed` is intentionally excluded: it's captured at the render that
     // flips `open` false (the correct one), and adding it would re-run the
     // animation whenever the callback's identity changes.

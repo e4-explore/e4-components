@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Box } from '../primitives/Box';
 
@@ -55,8 +55,18 @@ export function OverlayHost({ children }: { children: React.ReactNode }) {
     setEntries((cur) => cur.filter((e) => e.id !== id));
   }, []);
 
+  // `show`/`update`/`hide` are each stable (useCallback with no deps), but
+  // without memoizing the object that wraps them, this literal is a *new*
+  // object every render — including every render triggered by `entries`
+  // changing. Since every `useOverlay()` consumer (e.g. Select) re-renders
+  // whenever the context value's identity changes, an unmemoized value here
+  // turns any overlay.update() call into a render loop: update → new entries
+  // → new context value → every consumer re-renders → their effects re-fire
+  // → they call update() again.
+  const api = useMemo<OverlayApi>(() => ({ show, update, hide }), [show, update, hide]);
+
   return (
-    <OverlayContext.Provider value={{ show, update, hide }}>
+    <OverlayContext.Provider value={api}>
       {children}
       <Box pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 1000 }]}>
         {entries.map((e) =>
