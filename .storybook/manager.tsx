@@ -38,6 +38,12 @@ const e4Theme = create({
 
 addons.setConfig({
   theme: e4Theme,
+  sidebar: {
+    // Render the top-level sections (Components, Templates, Flows, …) as
+    // collapsible folders instead of always-open uppercase headers, so they
+    // start closed. The full-app example is auto-expanded below.
+    showRoots: false,
+  },
 });
 
 // Wireframe tokens, inlined: the manager runs outside the RN-web ThemeProvider,
@@ -116,7 +122,7 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <iframe
-          title="Create an app"
+          title="Create an app locally"
           src={FORM_URL}
           style={{ flex: '1 1 auto', width: '100%', border: 'none', background: PAPER }}
         />
@@ -201,11 +207,70 @@ function ensureMounted() {
   }
 }
 
+/**
+ * With `showRoots: false` every section starts collapsed. We want the last
+ * section — the full-app "Examples" demo — open on first load. Storybook only
+ * auto-expands the folder containing the *active* story, and the landing story
+ * is the first one (Welcome), so we expand "Examples" ourselves once per
+ * session. The session flag means a manual collapse sticks instead of being
+ * fought on the next sidebar re-render.
+ */
+const EXPAND_FLAG = 'e4-examples-expanded';
+
+function flagged(): boolean {
+  try {
+    return sessionStorage.getItem(EXPAND_FLAG) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setFlag() {
+  try {
+    sessionStorage.setItem(EXPAND_FLAG, '1');
+  } catch {
+    // sessionStorage can throw in locked-down contexts; ignore.
+  }
+}
+
+/**
+ * Try once to open the "Examples" section. Clicking is a *toggle*, so we only
+ * click while it's collapsed and let the caller re-check on the next tick —
+ * the section's expanded state is React-controlled and can revert on a sidebar
+ * re-render, so a single click doesn't always stick. Returns true once the
+ * section is confirmed open, at which point we lock the flag so a later manual
+ * collapse is respected instead of being re-opened.
+ */
+function tryExpandExamples(): boolean {
+  if (flagged()) return true;
+  // The "Examples" root title maps to the item id `examples`; its collapse
+  // toggle is a <button> with that id carrying aria-expanded.
+  const toggle = document.querySelector<HTMLElement>('button#examples[aria-expanded]');
+  if (!toggle) return false;
+  if (toggle.getAttribute('aria-expanded') === 'true') {
+    setFlag();
+    return true;
+  }
+  toggle.click();
+  return false;
+}
+
+function bootstrapExamplesExpansion() {
+  if (flagged()) return;
+  // Poll rather than react to every mutation: ticks are spaced far enough
+  // apart that the DOM settles between them, so we never double-toggle.
+  let tries = 0;
+  const timer = window.setInterval(() => {
+    if (tryExpandExamples() || ++tries >= 40) window.clearInterval(timer);
+  }, 150);
+}
+
 function bootstrapSidebarButton() {
   ensureMounted();
   const observer = new MutationObserver(() => ensureMounted());
   const region = document.getElementById('storybook-sidebar-region') ?? document.body;
   observer.observe(region, { childList: true, subtree: true });
+  bootstrapExamplesExpansion();
 }
 
 if (typeof document !== 'undefined') {

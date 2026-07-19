@@ -209,7 +209,7 @@ export const Start: StoryObj = {
       <Stack gap="lg">
         <Stack gap="xs">
           <Row gap="sm">
-            <Text variant="title">Create an app with this library</Text>
+            <Text variant="title">Create an app locally with this library</Text>
             {mode === 'local' ? <Badge label="local" tone="success" /> : null}
             {mode === 'static' ? <Badge label="copy & run" tone="accent" /> : null}
           </Row>

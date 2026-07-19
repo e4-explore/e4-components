@@ -151,6 +151,16 @@ export type {
   LegalConsentScreenProps,
   TrackingConsentScreenProps,
 } from './flows/legal/LegalScreens';
+export { WhatsNewScreen, RatePrompt } from './flows/engagement/EngagementScreens';
+export type {
+  WhatsNewScreenProps,
+  WhatsNewHighlight,
+  RatePromptProps,
+} from './flows/engagement/EngagementScreens';
+export { SupportFlow } from './flows/support/SupportFlow';
+export type { SupportFlowProps, SupportTicket, FaqItem } from './flows/support/SupportFlow';
+export { ReferralScreen } from './flows/referral/ReferralScreen';
+export type { ReferralScreenProps } from './flows/referral/ReferralScreen';
 export { OnboardingFlow } from './flows/onboarding/OnboardingFlow';
 export type {
   OnboardingFlowProps,

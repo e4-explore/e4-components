@@ -87,6 +87,20 @@ const preview: Preview = {
   parameters: {
     layout: 'fullscreen',
     controls: { expanded: true },
+    options: {
+      // Fixed sidebar order: intro → building blocks → composed patterns →
+      // multi-screen journeys → the full-app demo last.
+      storySort: {
+        order: [
+          'Welcome',
+          'Create app',
+          'Components',
+          'Templates',
+          'Flows',
+          'Examples',
+        ],
+      },
+    },
   },
 };
 

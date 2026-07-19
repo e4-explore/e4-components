@@ -9,7 +9,7 @@ import { Icon } from '../icons/Icon';
 import { DragProvider, type DropResult } from '../dnd/DragProvider';
 import { DragColumn } from '../dnd/DragColumn';
 
-const meta: Meta = { title: 'Lists & Data/Kanban board' };
+const meta: Meta = { title: 'Templates/Kanban board' };
 export default meta;
 
 interface Task {

@@ -136,6 +136,9 @@ Beyond components, the library ships complete journeys — browsable under **Flo
 - **Settings** — `SettingsFlow`: account hub, edit profile, change password/email, notification preferences, subscription entry, sign out, inline delete-account confirm.
 - **Legal** — `LegalConsentScreen` (first-run terms & privacy gate) and `TrackingConsentScreen` (iOS tracking-prompt priming).
 - **Ops** — `ForceUpgradeScreen`, `MaintenanceScreen`, and `OfflineBanner`: prop-driven; your app decides when, these decide how.
+- **Engagement** — `WhatsNewScreen` (release highlights, shown once per version) and `RatePrompt` (two-step: happy users go to the store, unhappy ones to your feedback form).
+- **Support** — `SupportFlow`: FAQ accordion first, escalating to a contact form via your `onSubmitTicket`; plugs into `SettingsFlow` through `onContactSupport`.
+- **Referral** — `ReferralScreen`: share/copy your invite code, stats, inline redeem with your `onRedeem`.
 
 Flows never talk to a backend directly. They call the `AuthClient` / `ProfileClient` / `BillingClient` interfaces provided through `FlowServicesProvider`. Two implementations ship:
 
