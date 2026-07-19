@@ -7,7 +7,7 @@ import { create } from 'storybook/theming';
 const e4Theme = create({
   base: 'light',
   brandTitle: 'e4 Explorebook',
-  brandUrl: 'https://github.com/ethanphilipgrove-dot',
+  brandUrl: 'https://github.com/e4-explore',
   brandImage: 'e4-logo.svg',
   brandTarget: '_blank',
 
@@ -169,7 +169,7 @@ function CreateAppLauncher() {
           cursor: 'pointer',
         }}
       >
-        Copy App Locally
+        Create App
       </button>
       {open ? createPortal(<CreateAppModal onClose={close} />, document.body) : null}
     </div>
