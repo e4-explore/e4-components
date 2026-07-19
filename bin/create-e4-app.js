@@ -5,6 +5,8 @@
  * create-e4-app — scaffold a new Expo app pre-wired with e4-components.
  *
  *   npx github:e4-explore/e4-components my-app
+ *   # optionally bake brand colors into the generated theme.ts:
+ *   npx github:e4-explore/e4-components my-app --primary "#3355D9" --accent "#4B7BFF"
  *   # or, once cloned locally:
  *   node bin/create-e4-app.js my-app
  *
@@ -24,14 +26,35 @@ function fail(msg) {
   process.exit(1);
 }
 
-const projectName = process.argv[2];
+const argv = process.argv.slice(2);
+const positional = [];
+const flags = {};
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i] === '--primary' || argv[i] === '--accent') {
+    flags[argv[i].slice(2)] = argv[i + 1];
+    i++;
+  } else {
+    positional.push(argv[i]);
+  }
+}
+
+const projectName = positional[0];
 
 if (!projectName) {
-  fail('Usage: create-e4-app <project-name>');
+  fail('Usage: create-e4-app <project-name> [--primary #hex] [--accent #hex]');
 }
 if (!/^[a-z0-9][a-z0-9-_]*$/i.test(projectName)) {
   fail('Project name must be alphanumeric (dashes and underscores allowed).');
 }
+
+const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+for (const key of ['primary', 'accent']) {
+  if (flags[key] !== undefined && !HEX_RE.test(flags[key])) {
+    fail('--' + key + ' must be a hex color like #3355D9.');
+  }
+}
+const primaryColor = flags.primary || '#3355D9';
+const accentColor = flags.accent || '#4B7BFF';
 
 const targetDir = path.resolve(process.cwd(), projectName);
 if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
@@ -133,8 +156,8 @@ files['theme.ts'] =
   'export const theme = createTheme({\n' +
   "  name: '" + projectName + "',\n" +
   '  colors: {\n' +
-  "    primary: '#3355D9',\n" +
-  "    accent: '#4B7BFF',\n" +
+  "    primary: '" + primaryColor + "',\n" +
+  "    accent: '" + accentColor + "',\n" +
   '  },\n' +
   '});\n';
 
