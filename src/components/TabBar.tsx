@@ -41,13 +41,7 @@ export function TabBar<T extends string>({ tabs, active, onChange }: TabBarProps
   }, [target]);
 
   return (
-    <Box
-      bg="surface"
-      style={{
-        borderTopWidth: theme.borders.regular,
-        borderColor: theme.colors.border,
-      }}
-    >
+    <Box bg="surface">
       <Row gap="none" px="sm" py="sm" style={{ position: 'relative' }}>
         <Animated.View
           style={[

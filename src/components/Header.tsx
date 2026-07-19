@@ -14,7 +14,7 @@ export interface HeaderProps {
   right?: React.ReactNode;
 }
 
-/** App bar: ruled bottom edge, title in the wireframe hand. */
+/** App bar: title in the wireframe hand. */
 export function Header({ title, onBack, left, right }: HeaderProps) {
   const theme = useTheme();
   return (
@@ -24,8 +24,6 @@ export function Header({ title, onBack, left, right }: HeaderProps) {
       bg="background"
       style={{
         height: 56,
-        borderBottomWidth: theme.borders.regular,
-        borderColor: theme.colors.border,
       }}
     >
       {onBack ? (

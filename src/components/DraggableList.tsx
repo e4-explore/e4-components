@@ -41,6 +41,10 @@ export interface DraggableListProps<T> {
 
 const AUTOSCROLL_EDGE = 60;
 const AUTOSCROLL_STEP = 14;
+// Extra breathing room above the first row and below the last, so a lifted
+// row's enhanced shadow (and slight scale-up) never gets hard-clipped by the
+// ScrollView's own bounds right at the top/bottom edge.
+const LIFT_MARGIN = 10;
 
 interface RowProps {
   id: string;
@@ -73,7 +77,7 @@ function DraggableRow({
   commitOrder,
   children,
 }: RowProps) {
-  const translateY = useSharedValue(positions.value[id] * rowHeight);
+  const translateY = useSharedValue(positions.value[id] * rowHeight + LIFT_MARGIN);
   const dragging = useSharedValue(false);
   const startY = useSharedValue(0);
   const scrollStart = useSharedValue(0);
@@ -86,7 +90,7 @@ function DraggableRow({
     (slot, prev) => {
       if (slot === undefined) return;
       if (!dragging.value && (prev === null || slot !== prev)) {
-        translateY.value = withSpring(slot * rowHeight, spring);
+        translateY.value = withSpring(slot * rowHeight + LIFT_MARGIN, spring);
       }
     },
   );
@@ -94,7 +98,7 @@ function DraggableRow({
   const moveTo = (y: number) => {
     'worklet';
     translateY.value = y;
-    const newIndex = Math.max(0, Math.min(count - 1, Math.round(y / rowHeight)));
+    const newIndex = Math.max(0, Math.min(count - 1, Math.round((y - LIFT_MARGIN) / rowHeight)));
     const current = positions.value[id];
     if (newIndex !== current) {
       // Shift every row between the old and new slot by one (not a swap) so
@@ -115,7 +119,7 @@ function DraggableRow({
     .activateAfterLongPress(activationDelay)
     .onStart(() => {
       dragging.value = true;
-      startY.value = positions.value[id] * rowHeight;
+      startY.value = positions.value[id] * rowHeight + LIFT_MARGIN;
       scrollStart.value = scrollY.value;
       runOnJS(setActiveId)(id);
     })
@@ -126,7 +130,7 @@ function DraggableRow({
       // Auto-scroll when the lifted row nears the viewport edges.
       const maxScroll = Math.max(0, contentHeight - viewportHeight);
       if (maxScroll > 0) {
-        const topInViewport = translateY.value - scrollY.value;
+        const topInViewport = translateY.value - LIFT_MARGIN - scrollY.value;
         if (topInViewport < AUTOSCROLL_EDGE && scrollY.value > 0) {
           scrollTo(scrollRef, 0, Math.max(0, scrollY.value - AUTOSCROLL_STEP), false);
         } else if (
@@ -139,7 +143,7 @@ function DraggableRow({
     })
     .onFinalize(() => {
       dragging.value = false;
-      translateY.value = withSpring(positions.value[id] * rowHeight, spring);
+      translateY.value = withSpring(positions.value[id] * rowHeight + LIFT_MARGIN, spring);
       runOnJS(commitOrder)(positions.value);
       runOnJS(setActiveId)(null);
     });
@@ -220,8 +224,8 @@ export function DraggableList<T>({
   return (
     <Animated.ScrollView
       ref={scrollRef}
-      style={[{ height: viewportHeight }, style]}
-      contentContainerStyle={{ height: contentHeight }}
+      style={[{ height: viewportHeight + LIFT_MARGIN * 2 }, style]}
+      contentContainerStyle={{ height: contentHeight + LIFT_MARGIN * 2 }}
       showsVerticalScrollIndicator={false}
       scrollEnabled={activeId === null}
     >
