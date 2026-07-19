@@ -6,6 +6,13 @@ export interface OverlayPlacement {
   x: number;
   y: number;
   width: number;
+  /**
+   * Render the entry across the whole overlay layer instead of pinned at
+   * (x, y). For full-screen floats like a bottom sheet that position
+   * themselves (scrim + edge-anchored panel) and don't want a measured
+   * trigger position.
+   */
+  fill?: boolean;
 }
 
 interface OverlayEntry extends OverlayPlacement {
@@ -52,11 +59,16 @@ export function OverlayHost({ children }: { children: React.ReactNode }) {
     <OverlayContext.Provider value={{ show, update, hide }}>
       {children}
       <Box pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 1000 }]}>
-        {entries.map((e) => (
-          <Box key={e.id} style={{ position: 'absolute', left: e.x, top: e.y, width: e.width }}>
-            {e.render()}
-          </Box>
-        ))}
+        {entries.map((e) =>
+          e.fill ? (
+            // Entry paints itself across the full layer (which is absoluteFill).
+            <React.Fragment key={e.id}>{e.render()}</React.Fragment>
+          ) : (
+            <Box key={e.id} style={{ position: 'absolute', left: e.x, top: e.y, width: e.width }}>
+              {e.render()}
+            </Box>
+          ),
+        )}
       </Box>
     </OverlayContext.Provider>
   );

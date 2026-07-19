@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { View } from 'react-native';
+import { useWindowDimensions, type View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -14,6 +14,16 @@ import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
 import { Icon } from '../icons/Icon';
 import { useOverlay } from '../overlay/OverlayHost';
+import { BottomSheet } from './BottomSheet';
+
+/**
+ * Below this viewport width the options open in a bottom sheet instead of an
+ * anchored dropdown. Phones (portrait ~360–430pt) get the sheet; tablets and
+ * web keep the dropdown. The sheet path needs no `measureInWindow`, which is
+ * why it also sidesteps the native trigger-measurement positioning issues the
+ * anchored dropdown is prone to on a soft-keyboard-resized window.
+ */
+const SHEET_MAX_WIDTH = 600;
 
 export interface SelectOption<T extends string> {
   value: T;
@@ -47,6 +57,8 @@ export function Select<T extends string>({
 }: SelectProps<T>) {
   const theme = useTheme();
   const overlay = useOverlay();
+  const { width: viewportWidth } = useWindowDimensions();
+  const useSheet = viewportWidth < SHEET_MAX_WIDTH;
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<View>(null);
   const overlayIdRef = useRef<number | null>(null);
@@ -61,6 +73,46 @@ export function Select<T extends string>({
   }));
 
   const selected = options.find((o) => o.value === value);
+
+  // Sheet variant (narrow viewports): options in a dismissible bottom sheet.
+  // No trigger measurement — the sheet anchors itself to the screen edge.
+  const renderSheet = () => (
+    <BottomSheet
+      open={open}
+      onClose={() => setOpen(false)}
+      onClosed={() => {
+        if (overlayIdRef.current !== null) {
+          overlay.hide(overlayIdRef.current);
+          overlayIdRef.current = null;
+        }
+      }}
+    >
+      {placeholder ? (
+        <Box pb="sm">
+          <Text variant="heading">{placeholder}</Text>
+        </Box>
+      ) : null}
+      {options.map((option) => {
+        const isSelected = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="menuitem"
+            pressScale={0.99}
+            onPress={() => {
+              onChange(option.value);
+              setOpen(false);
+            }}
+          >
+            <Row py="md" justify="space-between">
+              <Text weight={isSelected ? 'bold' : 'regular'}>{option.label}</Text>
+              {isSelected ? <Icon name="check" size={16} /> : null}
+            </Row>
+          </Pressable>
+        );
+      })}
+    </BottomSheet>
+  );
 
   const renderPanel = () => (
     <Animated.View
@@ -100,11 +152,17 @@ export function Select<T extends string>({
     </Animated.View>
   );
 
-  // Open/close: measure the trigger's screen position and register the
-  // floating panel with the overlay host, which paints above everything
-  // else regardless of what follows the Select in the layout.
+  // Open/close. Sheet path: register a full-layer entry and let the sheet
+  // manage its own dismissal (it unregisters via onClosed once its slide-down
+  // finishes, so the exit animation isn't cut off). Dropdown path: measure the
+  // trigger's screen position and register a floating panel anchored under it,
+  // hidden again on close.
   useEffect(() => {
     if (!open) return;
+    if (useSheet) {
+      overlayIdRef.current = overlay.show({ x: 0, y: 0, width: 0, fill: true }, renderSheet);
+      return;
+    }
     const node = triggerRef.current as MeasurableView | null;
     if (!node) return;
     node.measureInWindow((x, y, width, height) => {
@@ -117,14 +175,15 @@ export function Select<T extends string>({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, useSheet]);
 
-  // Keep the panel's rendered content current if options/value/onChange
-  // change while it's open (the overlay host only re-invokes whatever
-  // render function is currently registered, so it needs refreshing).
+  // Keep the registered entry's rendered content current: as options/value
+  // change, and — crucially for the sheet — so it sees `open` flip to false
+  // and can animate out. Runs while any entry is registered (the overlay host
+  // only re-invokes the render function currently registered).
   useEffect(() => {
-    if (open && overlayIdRef.current !== null) {
-      overlay.update(overlayIdRef.current, { render: renderPanel });
+    if (overlayIdRef.current !== null) {
+      overlay.update(overlayIdRef.current, { render: useSheet ? renderSheet : renderPanel });
     }
   });
 

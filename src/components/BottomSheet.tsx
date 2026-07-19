@@ -14,6 +14,12 @@ import { Box } from '../primitives/Box';
 export interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Fires once the close animation has fully settled (not the moment `open`
+   * flips false). Lets a host keep the sheet mounted through its slide-down,
+   * then tear it down — e.g. an overlay entry that unregisters afterwards.
+   */
+  onClosed?: () => void;
   children: React.ReactNode;
 }
 
@@ -23,7 +29,7 @@ const CLOSED_OFFSET = 600;
  * Bottom sheet that springs up from the edge; drag it down (or tap the scrim)
  * to dismiss. Fills its nearest positioned ancestor — mount it at screen root.
  */
-export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
+export function BottomSheet({ open, onClose, onClosed, children }: BottomSheetProps) {
   const theme = useTheme();
   const [mounted, setMounted] = useState(open);
   const offset = useSharedValue(CLOSED_OFFSET);
@@ -36,10 +42,17 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
       scrim.value = withTiming(1, { duration: theme.motion.durations.normal });
     } else {
       offset.value = withSpring(CLOSED_OFFSET, theme.motion.springs.gentle, (finished) => {
-        if (finished) runOnJS(setMounted)(false);
+        if (finished) {
+          runOnJS(setMounted)(false);
+          if (onClosed) runOnJS(onClosed)();
+        }
       });
       scrim.value = withTiming(0, { duration: theme.motion.durations.normal });
     }
+    // `onClosed` is intentionally excluded: it's captured at the render that
+    // flips `open` false (the correct one), and adding it would re-run the
+    // animation whenever the callback's identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, offset, scrim, theme]);
 
   const drag = Gesture.Pan()
