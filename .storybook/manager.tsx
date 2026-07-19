@@ -169,7 +169,7 @@ function CreateAppLauncher() {
           cursor: 'pointer',
         }}
       >
-        Create App
+        Create App w/Library
       </button>
       {open ? createPortal(<CreateAppModal onClose={close} />, document.body) : null}
     </div>
