@@ -183,6 +183,7 @@ files['App.tsx'] =
   "  Card,\n" +
   "  Input,\n" +
   "  Select,\n" +
+  "  DismissKeyboard,\n" +
   "  useToast,\n" +
   "} from 'e4-components';\n" +
   "import { theme } from './theme';\n\n" +
@@ -230,7 +231,9 @@ files['App.tsx'] =
   "            <OverlayHost>\n" +
   "              <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>\n" +
   "                {fontsLoaded ? (\n" +
-  "                  <Home />\n" +
+  "                  <DismissKeyboard>\n" +
+  "                    <Home />\n" +
+  "                  </DismissKeyboard>\n" +
   "                ) : (\n" +
   "                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>\n" +
   "                    <ActivityIndicator />\n" +

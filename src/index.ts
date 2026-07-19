@@ -47,6 +47,8 @@ export { Stack, Row, Spacer } from './primitives/Stack';
 export type { StackProps } from './primitives/Stack';
 export { Pressable } from './primitives/Pressable';
 export type { PressableProps } from './primitives/Pressable';
+export { DismissKeyboard } from './primitives/DismissKeyboard';
+export type { DismissKeyboardProps } from './primitives/DismissKeyboard';
 
 // Components
 export { Button } from './components/Button';
@@ -95,6 +97,8 @@ export { TabBar } from './components/TabBar';
 export type { TabBarProps, TabItem } from './components/TabBar';
 export { BottomSheet } from './components/BottomSheet';
 export type { BottomSheetProps } from './components/BottomSheet';
+export { Modal } from './components/Modal';
+export type { ModalProps } from './components/Modal';
 export { ToastProvider, useToast } from './components/Toast';
 export type { ToastTone } from './components/Toast';
 export { Filter } from './components/Filter';

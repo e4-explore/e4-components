@@ -56,6 +56,9 @@ const preview: Preview = {
       const themeKey = (context.globals.theme as keyof typeof themesByMode) ?? 'wireframe';
       const modeKey = (context.globals.mode as 'light' | 'dark') ?? 'light';
       const theme = themesByMode[themeKey][modeKey];
+      // `fullBleed` stories (e.g. the Create-app form shown inside a modal
+      // iframe) fill the available width instead of the catalog's 480px column.
+      const fullBleed = context.parameters.fullBleed === true;
       return (
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider theme={theme}>
@@ -66,9 +69,13 @@ const preview: Preview = {
                   p="lg"
                   style={{ minHeight: '100vh' as never }}
                 >
-                  <Box style={{ maxWidth: 480, width: '100%' as never }}>
+                  {fullBleed ? (
                     <Story />
-                  </Box>
+                  ) : (
+                    <Box style={{ maxWidth: 480, width: '100%' as never }}>
+                      <Story />
+                    </Box>
+                  )}
                 </Box>
               </OverlayHost>
             </ToastProvider>

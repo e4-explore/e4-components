@@ -13,7 +13,18 @@ import { Icon } from '../icons/Icon';
 import { useToast } from '../components/Toast';
 import { useTheme } from '../theme/ThemeProvider';
 
-const meta: Meta = { title: 'Create app' };
+/**
+ * The Create-app form. It isn't a browsable page — `!dev` keeps it out of the
+ * sidebar. It's rendered only as the body of the "Create app" modal launched
+ * from the sidebar button (see `.storybook/manager.tsx`), loaded in an iframe
+ * so it keeps the real e4 components, providers, and /api/create-app wiring.
+ * `fullBleed` drops the catalog's usual 480px width cap so it fills the modal.
+ */
+const meta: Meta = {
+  title: 'Create app',
+  tags: ['!dev'],
+  parameters: { fullBleed: true },
+};
 export default meta;
 
 const NAME_RE = /^[a-z0-9][a-z0-9-_]*$/i;
@@ -182,7 +193,7 @@ export const Start: StoryObj = {
           </Row>
           <Text color="inkMuted">
             {mode === 'local'
-              ? 'Storybook is running on your machine, so this page can scaffold the project for you directly.'
+              ? 'Storybook is running on your machine, so this can scaffold the project for you directly.'
               : 'Fill this in and copy the generated commands — they scaffold an Expo app pre-wired with e4-components (providers, fonts, starter theme, demo screen).'}
           </Text>
         </Stack>

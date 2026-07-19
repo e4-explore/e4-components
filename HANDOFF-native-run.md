@@ -88,5 +88,11 @@ Upload the EAS `.apk` to **appetize.io** (free account) and drive it in-browser
 
 ## 4. After that
 
-Once it renders correctly on a simulator, the whole flow (scaffold → deps →
-prebuild/EAS → device check) is worth codifying as a repeatable **skill**.
+~~Once it renders correctly on a simulator, the whole flow (scaffold → deps →
+prebuild/EAS → device check) is worth codifying as a repeatable **skill**.~~
+**Done:** the `ios-simulator` skill at `.claude/skills/ios-simulator/` wraps
+`sim-up.sh` (toolchain bootstrap + amfid-stall detection + pod hang watchdog +
+Simulator launch) with the failure→advice map and the success criteria from §3.
+Trigger it with "run the e4 app in the simulator". One caveat: the flow has not
+yet been seen end-to-end on this machine — the pending reboot (amfid stall) is
+still the blocker; after rebooting, the skill should complete the launch.
