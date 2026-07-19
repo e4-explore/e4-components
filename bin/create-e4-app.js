@@ -38,6 +38,10 @@ if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
   fail('Directory "' + projectName + '" already exists and is not empty.');
 }
 
+// EAS Build (and `expo prebuild`) require a reverse-DNS native identifier;
+// derive one from the project name so cloud builds work without manual setup.
+const bundleId = 'com.e4app.' + projectName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
 const files = {};
 
 files['package.json'] = JSON.stringify(
@@ -83,9 +87,16 @@ files['app.json'] = JSON.stringify(
       orientation: 'portrait',
       userInterfaceStyle: 'automatic',
       newArchEnabled: true,
-      ios: { supportsTablet: true },
-      android: {},
+      ios: { supportsTablet: true, bundleIdentifier: bundleId },
+      android: { package: bundleId },
       web: { bundler: 'metro' },
+      // Required: without this, prebuild still emits an Android drawable
+      // referencing color/splashscreen_background, but never defines that
+      // color resource, and the release build fails at the AAPT
+      // resource-link step. (The `expo-splash-screen` plugin's `plugins`
+      // array props are ignored on this SDK — only this legacy top-level
+      // `splash` key is actually read.)
+      splash: { backgroundColor: '#FAFAF7', resizeMode: 'contain' },
     },
   },
   null,
