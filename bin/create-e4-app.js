@@ -40,7 +40,7 @@ const argv = process.argv.slice(2);
 const positional = [];
 const flags = {};
 for (let i = 0; i < argv.length; i++) {
-  if (argv[i] === '--primary' || argv[i] === '--accent') {
+  if (argv[i] === '--primary' || argv[i] === '--accent' || argv[i] === '--flows') {
     flags[argv[i].slice(2)] = argv[i + 1];
     i++;
   } else {
@@ -51,7 +51,7 @@ for (let i = 0; i < argv.length; i++) {
 const projectName = positional[0];
 
 if (!projectName) {
-  fail('Usage: create-e4-app <project-name> [--primary #hex] [--accent #hex]');
+  fail('Usage: create-e4-app <project-name> [--primary #hex] [--accent #hex] [--flows auth]');
 }
 if (!/^[a-z0-9][a-z0-9-_]*$/i.test(projectName)) {
   fail('Project name must be alphanumeric (dashes and underscores allowed).');
@@ -65,6 +65,29 @@ for (const key of ['primary', 'accent']) {
 }
 const primaryColor = flags.primary || '#3355D9';
 const accentColor = flags.accent || '#4B7BFF';
+
+// Flow packs to pre-wire into the app. Comma-separated,
+// e.g. --flows auth,subscription. Each pack maps to ready-made journeys
+// exported by the library, composed into one app skeleton:
+// auth gate → onboarding → paywall → home ⇄ settings.
+const KNOWN_FLOWS = ['auth', 'onboarding', 'subscription', 'settings'];
+const selectedFlows = (flags.flows || '')
+  .split(',')
+  .map((f) => f.trim().toLowerCase())
+  .filter(Boolean);
+for (const flow of selectedFlows) {
+  if (!KNOWN_FLOWS.includes(flow)) {
+    fail('Unknown flow "' + flow + '". Available: ' + KNOWN_FLOWS.join(', '));
+  }
+}
+const withAuth = selectedFlows.includes('auth');
+const withOnboarding = selectedFlows.includes('onboarding');
+const withBilling = selectedFlows.includes('subscription');
+const withSettings = selectedFlows.includes('settings');
+if (withSettings && !withAuth) {
+  fail('The settings flow needs an account to manage — include auth too (--flows auth,settings).');
+}
+const anyFlow = selectedFlows.length > 0;
 
 const targetDir = path.resolve(process.cwd(), projectName);
 if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
@@ -171,42 +194,22 @@ files['theme.ts'] =
   '  },\n' +
   '});\n';
 
-files['App.tsx'] =
-  "import React from 'react';\n" +
-  "import { ActivityIndicator, View } from 'react-native';\n" +
-  "import { GestureHandlerRootView } from 'react-native-gesture-handler';\n" +
-  "import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';\n" +
-  "import { StatusBar } from 'expo-status-bar';\n" +
-  "import {\n" +
-  "  useFonts,\n" +
-  "  ShantellSans_400Regular,\n" +
-  "  ShantellSans_500Medium,\n" +
-  "  ShantellSans_700Bold,\n" +
-  "} from '@expo-google-fonts/shantell-sans';\n" +
-  "import {\n" +
-  "  ThemeProvider,\n" +
-  "  ToastProvider,\n" +
-  "  OverlayHost,\n" +
-  "  Stack,\n" +
-  "  Text,\n" +
-  "  Button,\n" +
-  "  Card,\n" +
-  "  Input,\n" +
-  "  Select,\n" +
-  "  DismissKeyboard,\n" +
-  "  useToast,\n" +
-  "} from 'e4-components';\n" +
-  "import { theme } from './theme';\n\n" +
-  "function Home() {\n" +
-  "  const toast = useToast();\n" +
-  "  const [name, setName] = React.useState('');\n" +
-  "  const [sport, setSport] = React.useState<string | null>(null);\n" +
-  "  return (\n" +
-  "    <Stack p=\"lg\" gap=\"md\">\n" +
-  "      <Text variant=\"title\">It works.</Text>\n" +
-  "      <Text color=\"inkMuted\">\n" +
-  "        This screen is rendered entirely from e4-components, installed from GitHub.\n" +
-  "      </Text>\n" +
+// ---- App.tsx assembly ------------------------------------------------------
+// The selected flow packs compose into one skeleton, gate by gate:
+//   fonts → auth → onboarding → paywall → (home ⇄ settings)
+
+function indent(code, spaces) {
+  const pad = ' '.repeat(spaces);
+  return code
+    .split('\n')
+    .map((line) => (line.length > 0 ? pad + line : line))
+    .join('\n');
+}
+
+// The demo Home screen. With the auth flow enabled it shows who is signed in
+// and offers sign-out (or the settings entry point); without it, it's the
+// plain component playground.
+const homeTryItCard =
   "      <Card>\n" +
   "        <Stack gap=\"sm\">\n" +
   "          <Text variant=\"heading\">Try it</Text>\n" +
@@ -223,41 +226,223 @@ files['App.tsx'] =
   "          />\n" +
   "          <Button label=\"Say hello\" onPress={() => toast.show('Hello, ' + (name || 'wireframe') + '!')} />\n" +
   "        </Stack>\n" +
-  "      </Card>\n" +
+  "      </Card>\n";
+
+const homeSignature = withSettings
+  ? 'function Home({ session, onOpenSettings }: { session: FlowSession; onOpenSettings: () => void }) {\n'
+  : withAuth
+    ? 'function Home({ session, onSignOut }: { session: FlowSession; onSignOut: () => void }) {\n'
+    : 'function Home() {\n';
+
+const homeHeader = withSettings
+  ? "      <Row>\n" +
+    "        <Text variant=\"title\">It works.</Text>\n" +
+    "        <Spacer />\n" +
+    "        <Button label=\"Settings\" size=\"sm\" variant=\"ghost\" onPress={onOpenSettings} />\n" +
+    "      </Row>\n" +
+    "      <Text color=\"inkMuted\">\n" +
+    "        Signed in as {session.user.email}. This screen is rendered entirely from\n" +
+    "        e4-components, installed from GitHub.\n" +
+    "      </Text>\n"
+  : withAuth
+    ? "      <Row>\n" +
+      "        <Text variant=\"title\">It works.</Text>\n" +
+      "        <Spacer />\n" +
+      "        <Button label=\"Sign out\" size=\"sm\" variant=\"ghost\" onPress={onSignOut} />\n" +
+      "      </Row>\n" +
+      "      <Text color=\"inkMuted\">\n" +
+      "        Signed in as {session.user.email}. This screen is rendered entirely from\n" +
+      "        e4-components, installed from GitHub.\n" +
+      "      </Text>\n"
+    : "      <Text variant=\"title\">It works.</Text>\n" +
+      "      <Text color=\"inkMuted\">\n" +
+      "        This screen is rendered entirely from e4-components, installed from GitHub.\n" +
+      "      </Text>\n";
+
+const homeComponent =
+  homeSignature +
+  "  const toast = useToast();\n" +
+  "  const [name, setName] = React.useState('');\n" +
+  "  const [sport, setSport] = React.useState<string | null>(null);\n" +
+  "  return (\n" +
+  "    <Stack p=\"lg\" gap=\"md\">\n" +
+  homeHeader +
+  homeTryItCard +
   "    </Stack>\n" +
   "  );\n" +
-  "}\n\n" +
-  "export default function App() {\n" +
-  "  const [fontsLoaded] = useFonts({\n" +
-  "    ShantellSans_400Regular,\n" +
-  "    ShantellSans_500Medium,\n" +
-  "    ShantellSans_700Bold,\n" +
-  "  });\n\n" +
-  "  return (\n" +
-  "    <GestureHandlerRootView style={{ flex: 1 }}>\n" +
-  "      <SafeAreaProvider>\n" +
-  "        <ThemeProvider theme={theme}>\n" +
-  "          <ToastProvider>\n" +
-  "            <OverlayHost>\n" +
-  "              <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>\n" +
-  "                {fontsLoaded ? (\n" +
-  "                  <DismissKeyboard>\n" +
-  "                    <Home />\n" +
-  "                  </DismissKeyboard>\n" +
-  "                ) : (\n" +
-  "                  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>\n" +
-  "                    <ActivityIndicator />\n" +
-  "                  </View>\n" +
-  "                )}\n" +
-  "                <StatusBar style=\"auto\" />\n" +
-  "              </SafeAreaView>\n" +
-  "            </OverlayHost>\n" +
-  "          </ToastProvider>\n" +
-  "        </ThemeProvider>\n" +
-  "      </SafeAreaProvider>\n" +
-  "    </GestureHandlerRootView>\n" +
-  "  );\n" +
   "}\n";
+
+const libImports = [
+  'ThemeProvider',
+  'ToastProvider',
+  'OverlayHost',
+  'Stack',
+  ...(withAuth ? ['Row', 'Spacer'] : []),
+  'Text',
+  'Button',
+  'Card',
+  'Input',
+  'Select',
+  'DismissKeyboard',
+  'useToast',
+  ...(anyFlow ? ['FlowServicesProvider', 'createMockClients'] : []),
+  ...(withAuth ? ['AuthFlow', 'type FlowSession'] : []),
+  ...(withOnboarding ? ['OnboardingFlow'] : []),
+  ...(withBilling ? ['PaywallScreen'] : []),
+  ...(withSettings ? ['SettingsFlow'] : []),
+];
+
+// App state hooks, one per selected gate.
+const stateLines = [];
+if (withAuth) {
+  stateLines.push('  const [session, setSession] = React.useState<FlowSession | null>(null);');
+}
+if (withOnboarding) {
+  stateLines.push(
+    '  // Real apps persist this (e.g. AsyncStorage) so onboarding runs once per install.',
+    '  const [onboarded, setOnboarded] = React.useState(false);',
+  );
+}
+if (withBilling) {
+  stateLines.push('  const [paid, setPaid] = React.useState(false);');
+}
+if (withSettings) {
+  stateLines.push("  const [screen, setScreen] = React.useState<'home' | 'settings'>('home');");
+  stateLines.push('  const signOut = () => {');
+  stateLines.push("    setScreen('home');");
+  stateLines.push('    setSession(null);');
+  stateLines.push('  };');
+} else if (withAuth) {
+  stateLines.push('  const signOut = () => {');
+  stateLines.push('    clients.auth.signOut().then(() => setSession(null));');
+  stateLines.push('  };');
+}
+
+// Gate chain, outermost first: fonts → auth → onboarding → paywall →
+// (settings ⇄ home). Composed as one flat conditional chain.
+const homeJsx =
+  '<DismissKeyboard>\n' +
+  (withSettings
+    ? "  <Home session={session} onOpenSettings={() => setScreen('settings')} />\n"
+    : withAuth
+      ? '  <Home session={session} onSignOut={signOut} />\n'
+      : '  <Home />\n') +
+  '</DismissKeyboard>';
+
+const gates = [];
+if (withAuth) {
+  gates.push({
+    cond: '!session',
+    jsx: '<AuthFlow appName="' + projectName + '" onAuthenticated={setSession} />',
+  });
+}
+if (withOnboarding) {
+  gates.push({
+    cond: '!onboarded',
+    jsx:
+      '<OnboardingFlow appName="' + projectName + '" onDone={() => setOnboarded(true)} />',
+  });
+}
+if (withBilling) {
+  gates.push({
+    cond: '!paid',
+    jsx: '<PaywallScreen onPurchased={() => setPaid(true)} onSkip={() => setPaid(true)} />',
+  });
+}
+if (withSettings) {
+  gates.push({
+    cond: "screen === 'settings' && session",
+    jsx:
+      '<SettingsFlow\n' +
+      '  session={session}\n' +
+      "  onClose={() => setScreen('home')}\n" +
+      '  onSignedOut={signOut}\n' +
+      (withBilling ? '  onChangePlan={() => setPaid(false)}\n' : '') +
+      '  appVersion="v1.0.0"\n' +
+      '/>',
+  });
+}
+
+const spinnerJsx =
+  "<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>\n" +
+  '  <ActivityIndicator />\n' +
+  '</View>';
+
+let renderExpr = '(\n' + indent(homeJsx, 2) + '\n)';
+for (const gate of gates.reverse()) {
+  renderExpr = gate.cond + ' ? (\n' + indent(gate.jsx, 2) + '\n) : ' + renderExpr;
+}
+renderExpr = '!fontsLoaded ? (\n' + indent(spinnerJsx, 2) + '\n) : ' + renderExpr;
+
+// Provider tree; FlowServicesProvider only when a flow pack is included.
+const innerDepth = anyFlow ? 16 : 14;
+const safeAreaChildren =
+  indent('{' + renderExpr + '}', innerDepth + 2) +
+  '\n' +
+  indent('<StatusBar style="auto" />', innerDepth + 2);
+const safeArea =
+  indent('<SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>', innerDepth) +
+  '\n' +
+  safeAreaChildren +
+  '\n' +
+  indent('</SafeAreaView>', innerDepth);
+const providersInner = anyFlow
+  ? indent('<FlowServicesProvider clients={clients}>', 14) + '\n' + safeArea + '\n' + indent('</FlowServicesProvider>', 14)
+  : safeArea;
+
+const appBody =
+  'export default function App() {\n' +
+  '  const [fontsLoaded] = useFonts({\n' +
+  '    ShantellSans_400Regular,\n' +
+  '    ShantellSans_500Medium,\n' +
+  '    ShantellSans_700Bold,\n' +
+  '  });\n' +
+  stateLines.join('\n') +
+  (stateLines.length > 0 ? '\n' : '') +
+  '\n' +
+  '  return (\n' +
+  '    <GestureHandlerRootView style={{ flex: 1 }}>\n' +
+  '      <SafeAreaProvider>\n' +
+  '        <ThemeProvider theme={theme}>\n' +
+  '          <ToastProvider>\n' +
+  '            <OverlayHost>\n' +
+  providersInner + '\n' +
+  '            </OverlayHost>\n' +
+  '          </ToastProvider>\n' +
+  '        </ThemeProvider>\n' +
+  '      </SafeAreaProvider>\n' +
+  '    </GestureHandlerRootView>\n' +
+  '  );\n' +
+  '}\n';
+
+
+files['App.tsx'] =
+  "import React from 'react';\n" +
+  "import { ActivityIndicator, View } from 'react-native';\n" +
+  "import { GestureHandlerRootView } from 'react-native-gesture-handler';\n" +
+  "import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';\n" +
+  "import { StatusBar } from 'expo-status-bar';\n" +
+  "import {\n" +
+  "  useFonts,\n" +
+  "  ShantellSans_400Regular,\n" +
+  "  ShantellSans_500Medium,\n" +
+  "  ShantellSans_700Bold,\n" +
+  "} from '@expo-google-fonts/shantell-sans';\n" +
+  "import {\n" +
+  libImports.map((name) => '  ' + name + ',\n').join('') +
+  "} from 'e4-components';\n" +
+  "import { theme } from './theme';\n\n" +
+  (anyFlow
+    ? '// Backend for the pre-wired flows. createMockClients() is an in-memory fake\n' +
+      '// so the app runs with zero setup' +
+      (withAuth ? ' — every "emailed" code is 123456' : '') +
+      '. Swap in\n' +
+      '// real adapters here when you connect a backend.\n' +
+      'const clients = createMockClients();\n\n'
+    : '') +
+  homeComponent +
+  '\n' +
+  appBody;
 
 // Auto-update wiring: Renovate keeps e4-components current with no manual work.
 // Patch/minor releases auto-merge; major bumps open a PR for review. Requires
@@ -301,7 +486,17 @@ files['README.md'] =
   '  → `ThemeProvider` → `ToastProvider` → `OverlayHost`, plus Shantell Sans font\n' +
   '  loading (the wireframe face) with a loading spinner until fonts are ready.\n' +
   '- `theme.ts` — your project theme. Override tokens here; every component\n' +
-  '  re-skins from it. See the library README for the full token list.\n\n' +
+  '  re-skins from it. See the library README for the full token list.\n' +
+  (anyFlow
+    ? '- **Flows** — ready-made journeys from the library, composed gate by gate\n' +
+      '  (' + selectedFlows.join(' → ') + '). They run against `createMockClients()`\n' +
+      '  — an in-memory backend' +
+      (withAuth ? ' where every "emailed" code is `123456`' : '') +
+      ' — so\n' +
+      '  everything works with zero setup. To go live, replace the clients in\n' +
+      '  `App.tsx` with real adapters that implement the same interfaces.\n'
+    : '') +
+  '\n' +
   '## Staying up to date\n\n' +
   '- This app references `e4-components` by a semver range (`#semver:^' +
   LIB_MAJOR + '.' + LIB_MINOR + '.0`), so it floats forward on published\n' +
