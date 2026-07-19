@@ -1,0 +1,47 @@
+# Auto-post project update
+#
+# On every merge to `main`, the shared e4-efficiency composite action drafts a
+# short in-voice post about the change, screenshots the deployed Storybook, and
+# publishes it to X. See the skill README + actions/auto-post/README.md for the
+# full input list.
+#
+# Secrets required (repo Settings -> Secrets and variables -> Actions):
+#   GEMINI_API_KEY, X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET
+#
+# Escape hatch: to land a commit WITHOUT auto-posting about it (e.g. the commit
+# that adds this workflow), include `[skip post]` in the commit message. Normal
+# commits post as usual; release.yml still runs either way.
+name: Auto-post project update
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['.github/auto-post/history.jsonl']
+  workflow_dispatch:
+    inputs:
+      sha: { required: true, type: string }
+permissions:
+  contents: write
+  pull-requests: read
+concurrency:
+  group: auto-post
+  cancel-in-progress: false
+jobs:
+  post:
+    # Skip when the pushed commit opts out with `[skip post]`; null on
+    # workflow_dispatch (backfill), where contains() is false so the job runs.
+    if: ${{ !contains(github.event.head_commit.message, '[skip post]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: e4-explore/e4-efficiency/actions/auto-post@v1
+        with:
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          x-api-key: ${{ secrets.X_API_KEY }}
+          x-api-secret: ${{ secrets.X_API_SECRET }}
+          x-access-token: ${{ secrets.X_ACCESS_TOKEN }}
+          x-access-token-secret: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          homepage-url: https://e4-components.vercel.app
+          routes: '["/?path=/story/welcome--start"]'
+          sha: ${{ github.event.inputs.sha }}
