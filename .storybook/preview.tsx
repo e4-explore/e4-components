@@ -24,12 +24,17 @@ const preview: Preview = {
     theme: {
       description: 'Design theme',
       toolbar: {
-        title: 'Theme',
+        // Wireframe is the baseline, so it isn't a listed item: with nothing
+        // matched the button falls back to this static "Apply theme" title.
+        // Picking a theme swaps in its name; the reset item clears back to
+        // wireframe (reset sets the global to undefined, which the decorator
+        // already treats as wireframe).
+        title: 'Apply theme',
         icon: 'paintbrush',
         items: [
-          { value: 'wireframe', title: 'Wireframe' },
-          { value: 'manifest', title: 'Manifest' },
-          { value: 'brand', title: 'Branded demo' },
+          { value: 'manifest', title: 'Ledger' },
+          { value: 'brand', title: 'Polished' },
+          { type: 'reset', title: 'Clear theme' },
         ],
         dynamicTitle: true,
       },
