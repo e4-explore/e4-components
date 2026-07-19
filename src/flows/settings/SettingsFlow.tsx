@@ -42,6 +42,8 @@ export interface SettingsFlowProps {
   onClose?: () => void;
   /** Route to the paywall from the subscription screen. */
   onChangePlan?: () => void;
+  /** Adds a "Help & support" row — route to SupportFlow (or your own). */
+  onContactSupport?: () => void;
   /** Shown at the foot of the hub, e.g. "v1.0.2". */
   appVersion?: string;
 }
@@ -59,6 +61,7 @@ export function SettingsFlow({
   onDeleted,
   onClose,
   onChangePlan,
+  onContactSupport,
   appVersion,
 }: SettingsFlowProps) {
   const { auth, profile } = useFlowServices();
@@ -150,6 +153,9 @@ export function SettingsFlow({
                     chevron
                     onPress={() => nav.go('subscription')}
                   />
+                  {onContactSupport ? (
+                    <ListItem title="Help & support" chevron onPress={onContactSupport} />
+                  ) : null}
                 </List>
               </Stack>
 
