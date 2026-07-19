@@ -22,7 +22,7 @@ export const wireframeDark = createTheme(
       inkFaint: '#63636C',
       border: chalk,
       borderStrong: chalk,
-      primary: '#5C8AFF',
+      primary: '#4C7EFF',
       onPrimary: '#10121A',
       accent: '#7FA3FF',
       success: '#3ED98A',

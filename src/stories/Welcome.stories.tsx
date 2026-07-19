@@ -10,6 +10,8 @@ import { useTheme } from '../theme/ThemeProvider';
 const meta: Meta = { title: 'Welcome' };
 export default meta;
 
+const SWATCH_LABELS: Partial<Record<string, string>> = { background: 'bg' };
+
 export const Start: StoryObj = {
   render: () => {
     const theme = useTheme();
@@ -45,7 +47,7 @@ export const Start: StoryObj = {
                       }}
                     />
                     <Text variant="caption" color="inkMuted">
-                      {key}
+                      {SWATCH_LABELS[key] ?? key}
                     </Text>
                   </Stack>
                 ),
