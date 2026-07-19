@@ -4,10 +4,23 @@ Base component library for all E4 projects, built with React Native (iOS, Androi
 
 **The idea:** every component ships looking like an intentional, hand-drawn **wireframe** — playful Shantell Sans type, ink-on-paper palette, hard offset shadows — while the *interactions* are flagship-quality: spring physics, drag-to-reorder, inline editing, and no layout jumps anywhere. Build a whole working app that reads as a prototype, then flip one theme object to rebrand it into a real product.
 
-## Install (in a consuming project)
+## Scaffold a new app (fastest start)
 
 ```sh
-npm install github:<you>/e4-components
+npx github:e4-explore/e4-components my-app
+cd my-app
+npm install
+npx expo start
+```
+
+`create-e4-app` generates a runnable Expo project with the providers already
+nested, a starter `theme.ts`, Shantell Sans font loading, and a demo screen —
+so you skip the wiring below and land on a working app.
+
+## Install (in an existing project)
+
+```sh
+npm install github:e4-explore/e4-components
 npm install react-native-reanimated react-native-gesture-handler react-native-worklets
 ```
 
@@ -105,6 +118,7 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 - **Forms** — `Input`, `TextArea`, `FormField` (animated errors), `Checkbox`, `RadioGroup`, `Switch`, `Select` (floating panel overlays content below the trigger, via `OverlayHost`)
 - **Inline** — `InlineEdit` (tap-to-edit, pixel-stable swap), `Accordion`, `Expandable` (the measured-height spring engine)
 - **Lists & data** — `List`/`ListItem` (animated add/remove), `DraggableList` (long-press lift, spring reorder, edge auto-scroll), `Table`, `EmptyState`, `Skeleton`, `ProgressBar`
+- **Drag & drop (kanban)** — `DragProvider` + `DragColumn`: move cards across columns, floating overlay clone follows the finger, dashed insertion line marks the drop slot, board-level `onDrop({from, itemKey, to, toIndex, payload})`
 - **App shell** — `Header`, `TabBar` (sliding indicator), `BottomSheet` (pan-to-dismiss), `ToastProvider`/`useToast`
 - **Overlay** — `OverlayHost`/`useOverlay` (measured-position floating panels that escape any ancestor's stacking context — powers Select, available for building your own popovers/tooltips)
 - **Icons** — `Icon` (`chevronLeft/Right/Down`, `check`, `close`, `grip`, `home`, `search`, `chart`, `smile`, `edit`) — built from plain Views (rotated bars, border-corner chevrons, dot grids), not SVG, so no extra native dependency
@@ -119,8 +133,8 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 
 ## Roadmap ideas
 
-- Cross-container drag (kanban) via a global `DragProvider`
-- Variable-height rows in `DraggableList`
+- Variable-height rows in `DraggableList` and `DragColumn`
+- Cross-column auto-scroll while dragging on a tall board
 - Haptics hook (expo-haptics, optional)
-- `npx create-e4-app` scaffold with a pre-wired theme file
 - Publish Storybook to a shared URL; visual regression via Chromatic
+- First real consumer: prove the GitHub install path + native font loading on a device (see `HANDOFF.md`)
