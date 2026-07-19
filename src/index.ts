@@ -97,3 +97,5 @@ export { BottomSheet } from './components/BottomSheet';
 export type { BottomSheetProps } from './components/BottomSheet';
 export { ToastProvider, useToast } from './components/Toast';
 export type { ToastTone } from './components/Toast';
+export { Filter } from './components/Filter';
+export type { FilterProps, FilterOption } from './components/Filter';
