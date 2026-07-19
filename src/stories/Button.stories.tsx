@@ -18,6 +18,10 @@ const meta = {
   argTypes: {
     variant: { control: 'select', options: ['primary', 'secondary', 'ghost', 'danger'] },
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    icon: {
+      control: 'select',
+      options: [undefined, 'chevronLeft', 'chevronRight', 'chevronDown', 'check', 'close', 'grip', 'home', 'search', 'chart', 'smile', 'edit'],
+    },
   },
 } satisfies Meta<typeof Button>;
 
@@ -49,7 +53,33 @@ export const Variants: Story = {
       <Button label="Loading…" loading />
       <Button label="Disabled" disabled />
       <Button label="Block button" block />
+      <Button label="With icon" icon="check" variant="secondary" />
       <Button label="With glyphs" variant="secondary" left={<>✚</>} right={<>›</>} />
     </Stack>
   ),
+};
+
+export const IconOnly: Story = {
+  render: () => {
+    const toast = useToast();
+    return (
+      <Stack>
+        <Row>
+          <Button icon="check" accessibilityLabel="Confirm" variant="primary" onPress={() => toast.show('Confirmed')} />
+          <Button icon="edit" accessibilityLabel="Edit" variant="secondary" />
+          <Button icon="close" accessibilityLabel="Dismiss" variant="ghost" />
+          <Button icon="close" accessibilityLabel="Delete" variant="danger" />
+        </Row>
+        <Row>
+          <Button icon="search" accessibilityLabel="Search" size="sm" variant="secondary" />
+          <Button icon="search" accessibilityLabel="Search" size="md" variant="secondary" />
+          <Button icon="search" accessibilityLabel="Search" size="lg" variant="secondary" />
+        </Row>
+        <Row>
+          <Button icon="chevronRight" accessibilityLabel="Loading" variant="secondary" loading />
+          <Button icon="chevronRight" accessibilityLabel="Disabled" variant="secondary" disabled />
+        </Row>
+      </Stack>
+    );
+  },
 };

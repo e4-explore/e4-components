@@ -1,10 +1,20 @@
 import React from 'react';
 import type { Preview } from '@storybook/react-native-web-vite';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, ToastProvider, OverlayHost, Box, wireframe, wireframeDark } from '../src';
+import {
+  ThemeProvider,
+  ToastProvider,
+  OverlayHost,
+  Box,
+  wireframe,
+  wireframeDark,
+  manifest,
+  manifestDark,
+} from '../src';
 import { brandTheme, brandThemeDark } from './brandTheme';
 
 const themesByMode = {
+  manifest: { light: manifest, dark: manifestDark },
   wireframe: { light: wireframe, dark: wireframeDark },
   brand: { light: brandTheme, dark: brandThemeDark },
 };
@@ -18,6 +28,7 @@ const preview: Preview = {
         icon: 'paintbrush',
         items: [
           { value: 'wireframe', title: 'Wireframe' },
+          { value: 'manifest', title: 'Manifest' },
           { value: 'brand', title: 'Branded demo' },
         ],
         dynamicTitle: true,

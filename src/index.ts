@@ -3,7 +3,9 @@ export { ThemeProvider, useTheme } from './theme/ThemeProvider';
 export { createTheme } from './theme/createTheme';
 export { wireframe } from './theme/wireframe';
 export { wireframeDark } from './theme/wireframeDark';
-export { wireframeFonts, systemFonts } from './theme/fonts';
+export { manifest } from './theme/manifest';
+export { manifestDark } from './theme/manifestDark';
+export { wireframeFonts, manifestFonts, systemFonts } from './theme/fonts';
 export type {
   Theme,
   ThemeOverride,
@@ -95,3 +97,5 @@ export { BottomSheet } from './components/BottomSheet';
 export type { BottomSheetProps } from './components/BottomSheet';
 export { ToastProvider, useToast } from './components/Toast';
 export type { ToastTone } from './components/Toast';
+export { Ticket } from './components/Ticket';
+export type { TicketProps } from './components/Ticket';

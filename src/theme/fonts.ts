@@ -24,6 +24,29 @@ export const wireframeFonts: { regular: FontFace; medium: FontFace; bold: FontFa
   })!,
 };
 
+/**
+ * JetBrains Mono — the manifest face. Dense, technical, ledger-like: built
+ * for barcodes, binary strings, and tabular data rows rather than prose.
+ *
+ * Web resolves through CSS font-family + weight. Native needs one registered
+ * family per weight; the names below match what `@expo-google-fonts/jetbrains-mono`
+ * (or a manual link of the static TTFs) registers.
+ */
+export const manifestFonts: { regular: FontFace; medium: FontFace; bold: FontFace } = {
+  regular: Platform.select<FontFace>({
+    web: { fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', monospace", fontWeight: '400' },
+    default: { fontFamily: 'JetBrainsMono_400Regular' },
+  })!,
+  medium: Platform.select<FontFace>({
+    web: { fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', monospace", fontWeight: '500' },
+    default: { fontFamily: 'JetBrainsMono_500Medium' },
+  })!,
+  bold: Platform.select<FontFace>({
+    web: { fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', monospace", fontWeight: '700' },
+    default: { fontFamily: 'JetBrainsMono_700Bold' },
+  })!,
+};
+
 /** System font stack, handy for branded themes that don't ship a custom face. */
 export const systemFonts: { regular: FontFace; medium: FontFace; bold: FontFace } = {
   regular: Platform.select<FontFace>({
