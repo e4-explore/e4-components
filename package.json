@@ -6,8 +6,12 @@
   "types": "src/index.ts",
   "react-native": "src/index.ts",
   "source": "src/index.ts",
+  "bin": {
+    "create-e4-app": "bin/create-e4-app.js"
+  },
   "files": [
-    "src"
+    "src",
+    "bin"
   ],
   "sideEffects": false,
   "scripts": {
