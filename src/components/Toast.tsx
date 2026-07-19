@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, { ZoomIn, FadeOut } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      <Box
+      <SafeAreaView
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { alignItems: 'center', paddingTop: 24 }]}
       >
@@ -89,7 +89,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <ToastCard key={toast.id} toast={toast} />
           ))}
         </Box>
-      </Box>
+      </SafeAreaView>
     </ToastContext.Provider>
   );
 }
