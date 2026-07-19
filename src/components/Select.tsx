@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useWindowDimensions, type View } from 'react-native';
+import { Pressable as RNPressable, StyleSheet, useWindowDimensions, type View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -62,6 +62,11 @@ export function Select<T extends string>({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<View>(null);
   const overlayIdRef = useRef<number | null>(null);
+  // Where the anchored dropdown panel should sit, measured from the trigger
+  // when it opens. A ref (not state) so the overlay render closures — which
+  // are re-registered every render — always read the latest measurement
+  // without re-triggering anything.
+  const panelRectRef = useRef<{ x: number; y: number; width: number } | null>(null);
   const rotation = useSharedValue(0);
 
   useEffect(() => {
@@ -114,7 +119,24 @@ export function Select<T extends string>({
     </BottomSheet>
   );
 
+  // Dropdown variant: an invisible full-layer backdrop (tap anywhere outside
+  // to dismiss) with the options panel absolutely positioned at the trigger's
+  // measured rect. The panel renders after the backdrop so it stacks above it.
   const renderPanel = () => (
+    <>
+      <RNPressable
+        accessibilityLabel="Close options"
+        onPress={() => setOpen(false)}
+        style={StyleSheet.absoluteFill}
+      />
+      <Box
+        style={{
+          position: 'absolute',
+          left: panelRectRef.current?.x ?? 0,
+          top: panelRectRef.current?.y ?? 0,
+          width: panelRectRef.current?.width ?? 0,
+        }}
+      >
     <Animated.View
       entering={FadeInDown.duration(160)}
       exiting={FadeOutUp.duration(120)}
@@ -150,13 +172,16 @@ export function Select<T extends string>({
         })}
       </Box>
     </Animated.View>
+      </Box>
+    </>
   );
 
   // Open/close. Sheet path: register a full-layer entry and let the sheet
   // manage its own dismissal (it unregisters via onClosed once its slide-down
-  // finishes, so the exit animation isn't cut off). Dropdown path: measure the
-  // trigger's screen position and register a floating panel anchored under it,
-  // hidden again on close.
+  // finishes, so the exit animation isn't cut off; tapping its scrim closes
+  // it). Dropdown path: measure the trigger's screen position, then register
+  // a full-layer entry too — an invisible backdrop that dismisses on outside
+  // tap, plus the panel anchored at the measured rect — hidden again on close.
   useEffect(() => {
     if (!open) return;
     if (useSheet) {
@@ -166,7 +191,8 @@ export function Select<T extends string>({
     const node = triggerRef.current as MeasurableView | null;
     if (!node) return;
     node.measureInWindow((x, y, width, height) => {
-      overlayIdRef.current = overlay.show({ x, y: y + height, width }, renderPanel);
+      panelRectRef.current = { x, y: y + height, width };
+      overlayIdRef.current = overlay.show({ x: 0, y: 0, width: 0, fill: true }, renderPanel);
     });
     return () => {
       if (overlayIdRef.current !== null) {
