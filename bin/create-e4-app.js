@@ -19,7 +19,17 @@
 const fs = require('fs');
 const path = require('path');
 
-const GITHUB_DEP = 'github:e4-explore/e4-components';
+// Reference the library by a semver *range* rather than a bare branch, so the
+// scaffolded app floats forward on published tags instead of freezing on the
+// commit that happened to be HEAD at install time. Continuous releases only
+// bump the patch, so a caret on the current minor (`^0.1.0` → >=0.1.0 <0.2.0)
+// captures every future patch. Renovate (renovate.json below) handles minor/
+// major bumps. Derived from the library's own version so it always tracks the
+// version this app was scaffolded against.
+const LIB_VERSION = require(path.join(__dirname, '..', 'package.json')).version;
+const [LIB_MAJOR, LIB_MINOR] = LIB_VERSION.split('.');
+const GITHUB_DEP =
+  'github:e4-explore/e4-components#semver:^' + LIB_MAJOR + '.' + LIB_MINOR + '.0';
 
 function fail(msg) {
   console.error('\n  ✗ ' + msg + '\n');
@@ -249,6 +259,30 @@ files['App.tsx'] =
   "  );\n" +
   "}\n";
 
+// Auto-update wiring: Renovate keeps e4-components current with no manual work.
+// Patch/minor releases auto-merge; major bumps open a PR for review. Requires
+// the Renovate GitHub App to be installed on the app's repo once (see README).
+files['renovate.json'] = JSON.stringify(
+  {
+    $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+    extends: ['config:recommended'],
+    packageRules: [
+      {
+        description:
+          'Auto-merge e4-components patch & minor releases; major opens a PR for review.',
+        matchPackageNames: ['e4-components'],
+        matchUpdateTypes: ['patch', 'minor'],
+        automerge: true,
+        automergeType: 'pr',
+        platformAutomerge: true,
+      },
+    ],
+    lockFileMaintenance: { enabled: true, automerge: true },
+  },
+  null,
+  2,
+);
+
 files['.gitignore'] =
   ['node_modules/', '.expo/', 'dist/', 'web-build/', '*.log', '.DS_Store'].join('\n') + '\n';
 
@@ -268,6 +302,15 @@ files['README.md'] =
   '  loading (the wireframe face) with a loading spinner until fonts are ready.\n' +
   '- `theme.ts` — your project theme. Override tokens here; every component\n' +
   '  re-skins from it. See the library README for the full token list.\n\n' +
+  '## Staying up to date\n\n' +
+  '- This app references `e4-components` by a semver range (`#semver:^' +
+  LIB_MAJOR + '.' + LIB_MINOR + '.0`), so it floats forward on published\n' +
+  '  releases instead of freezing on one commit. New library versions are\n' +
+  '  published automatically (a tag per merge to the library\'s `main`).\n' +
+  '- `renovate.json` makes updates hands-off: patch/minor releases auto-merge,\n' +
+  '  major bumps open a PR. **One-time setup:** install the [Renovate GitHub\n' +
+  '  App](https://github.com/apps/renovate) on this repo. Until then, pull\n' +
+  '  updates manually with `npm update e4-components`.\n\n' +
   '## Notes\n\n' +
   '- The library ships TypeScript source (no build step) and is transpiled by\n' +
   "  Metro. If Metro reports it can't parse `e4-components` source, add it to\n" +
