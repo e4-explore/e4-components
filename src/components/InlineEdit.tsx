@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { TextInput, type StyleProp, type TextStyle } from 'react-native';
+import { TextInput, type StyleProp, type TextStyle, type NativeSyntheticEvent, type TextInputContentSizeChangeEventData } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import type { TextVariantName } from '../theme/tokens';
 import { Pressable } from '../primitives/Pressable';
@@ -45,6 +45,17 @@ export function InlineEdit({
     margin: 0,
   };
 
+  // A multiline TextInput renders as a <textarea> on web, which defaults to a
+  // browser-chosen multi-row height taller than one line of text — pushing
+  // the underline below where the single-line placeholder's dashed line
+  // sits. Pin it to exactly one line until real content grows it.
+  const singleLineHeight = v.lineHeight + theme.spacing.xxs * 2;
+  const [inputHeight, setInputHeight] = useState(singleLineHeight);
+
+  const onContentSizeChange = (e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) => {
+    setInputHeight(Math.max(singleLineHeight, e.nativeEvent.contentSize.height));
+  };
+
   const commit = () => {
     setEditing(false);
     const next = draft.trim();
@@ -59,6 +70,7 @@ export function InlineEdit({
         value={draft}
         multiline={multiline}
         onChangeText={setDraft}
+        onContentSizeChange={multiline ? onContentSizeChange : undefined}
         onBlur={commit}
         onSubmitEditing={multiline ? undefined : commit}
         blurOnSubmit={!multiline}
@@ -66,6 +78,7 @@ export function InlineEdit({
         placeholderTextColor={theme.colors.inkFaint}
         style={[
           sharedText,
+          multiline ? { height: inputHeight } : null,
           {
             borderBottomWidth: theme.borders.regular,
             borderColor: theme.colors.accent,
@@ -86,6 +99,7 @@ export function InlineEdit({
       pressOpacity={0.6}
       onPress={() => {
         setDraft(value);
+        setInputHeight(singleLineHeight);
         setEditing(true);
       }}
     >
