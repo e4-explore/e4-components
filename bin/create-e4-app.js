@@ -69,8 +69,8 @@ const accentColor = flags.accent || '#4B7BFF';
 // Flow packs to pre-wire into the app. Comma-separated,
 // e.g. --flows auth,subscription. Each pack maps to ready-made journeys
 // exported by the library, composed into one app skeleton:
-// auth gate → onboarding → paywall → home ⇄ settings.
-const KNOWN_FLOWS = ['auth', 'onboarding', 'subscription', 'settings'];
+// legal → auth → onboarding → paywall → home ⇄ settings.
+const KNOWN_FLOWS = ['legal', 'auth', 'onboarding', 'subscription', 'settings'];
 const selectedFlows = (flags.flows || '')
   .split(',')
   .map((f) => f.trim().toLowerCase())
@@ -80,6 +80,7 @@ for (const flow of selectedFlows) {
     fail('Unknown flow "' + flow + '". Available: ' + KNOWN_FLOWS.join(', '));
   }
 }
+const withLegal = selectedFlows.includes('legal');
 const withAuth = selectedFlows.includes('auth');
 const withOnboarding = selectedFlows.includes('onboarding');
 const withBilling = selectedFlows.includes('subscription');
@@ -115,6 +116,9 @@ files['package.json'] = JSON.stringify(
     dependencies: {
       'e4-components': GITHUB_DEP,
       '@expo-google-fonts/shantell-sans': '^0.2.3',
+      // Only referenced by lib/backend.ts once real env vars exist, but
+      // installed up front so going live is config-only.
+      ...(anyFlow ? { '@supabase/supabase-js': '^2.45.0' } : {}),
       expo: '~51.0.0',
       'expo-font': '~12.0.0',
       'expo-status-bar': '~1.12.0',
@@ -196,7 +200,7 @@ files['theme.ts'] =
 
 // ---- App.tsx assembly ------------------------------------------------------
 // The selected flow packs compose into one skeleton, gate by gate:
-//   fonts → auth → onboarding → paywall → (home ⇄ settings)
+//   fonts → legal → auth → onboarding → paywall → (home ⇄ settings)
 
 function indent(code, spaces) {
   const pad = ' '.repeat(spaces);
@@ -285,7 +289,8 @@ const libImports = [
   'Select',
   'DismissKeyboard',
   'useToast',
-  ...(anyFlow ? ['FlowServicesProvider', 'createMockClients'] : []),
+  ...(anyFlow ? ['FlowServicesProvider'] : []),
+  ...(withLegal ? ['LegalConsentScreen'] : []),
   ...(withAuth ? ['AuthFlow', 'type FlowSession'] : []),
   ...(withOnboarding ? ['OnboardingFlow'] : []),
   ...(withBilling ? ['PaywallScreen'] : []),
@@ -294,6 +299,12 @@ const libImports = [
 
 // App state hooks, one per selected gate.
 const stateLines = [];
+if (withLegal) {
+  stateLines.push(
+    '  // Real apps persist this (e.g. AsyncStorage) and add real terms/privacy URLs.',
+    '  const [consented, setConsented] = React.useState(false);',
+  );
+}
 if (withAuth) {
   stateLines.push('  const [session, setSession] = React.useState<FlowSession | null>(null);');
 }
@@ -318,7 +329,7 @@ if (withSettings) {
   stateLines.push('  };');
 }
 
-// Gate chain, outermost first: fonts → auth → onboarding → paywall →
+// Gate chain, outermost first: fonts → legal → auth → onboarding → paywall →
 // (settings ⇄ home). Composed as one flat conditional chain.
 const homeJsx =
   '<DismissKeyboard>\n' +
@@ -330,6 +341,15 @@ const homeJsx =
   '</DismissKeyboard>';
 
 const gates = [];
+if (withLegal) {
+  gates.push({
+    cond: '!consented',
+    jsx:
+      '<LegalConsentScreen appName="' +
+      projectName +
+      '" onAccepted={() => setConsented(true)} />',
+  });
+}
 if (withAuth) {
   gates.push({
     cond: '!session',
@@ -431,18 +451,42 @@ files['App.tsx'] =
   "import {\n" +
   libImports.map((name) => '  ' + name + ',\n').join('') +
   "} from 'e4-components';\n" +
-  "import { theme } from './theme';\n\n" +
-  (anyFlow
-    ? '// Backend for the pre-wired flows. createMockClients() is an in-memory fake\n' +
-      '// so the app runs with zero setup' +
-      (withAuth ? ' — every "emailed" code is 123456' : '') +
-      '. Swap in\n' +
-      '// real adapters here when you connect a backend.\n' +
-      'const clients = createMockClients();\n\n'
-    : '') +
+  "import { theme } from './theme';\n" +
+  (anyFlow ? "import { clients } from './lib/backend';\n" : '') +
+  '\n' +
   homeComponent +
   '\n' +
   appBody;
+
+if (anyFlow) {
+  // The backend seam: mock by default, Supabase the moment env vars exist.
+  files['lib/backend.ts'] =
+    "// Backend for the app's flows.\n" +
+    '//\n' +
+    '// Out of the box this is an in-memory mock — zero setup' +
+    (withAuth ? ', every "emailed"\n// code is 123456' : '') +
+    ', and data resets on reload. To go live with Supabase\n' +
+    '// (~5 minutes), follow supabase/README.md, then `cp .env.example .env` and\n' +
+    '// fill it in: the app switches automatically when the env vars are present.\n' +
+    "import { createClient } from '@supabase/supabase-js';\n" +
+    'import {\n' +
+    '  createMockClients,\n' +
+    '  createSupabaseClients,\n' +
+    '  type FlowClients,\n' +
+    "} from 'e4-components';\n\n" +
+    'const url = process.env.EXPO_PUBLIC_SUPABASE_URL;\n' +
+    'const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;\n\n' +
+    'export const clients: FlowClients =\n' +
+    '  url && anonKey\n' +
+    '    ? createSupabaseClients({ supabase: createClient(url, anonKey) })\n' +
+    '    : createMockClients();\n';
+
+  files['.env.example'] =
+    '# Copy to .env and fill in from your Supabase project (Project Settings → API).\n' +
+    '# While these are empty the app runs on the in-memory mock backend.\n' +
+    'EXPO_PUBLIC_SUPABASE_URL=\n' +
+    'EXPO_PUBLIC_SUPABASE_ANON_KEY=\n';
+}
 
 // Auto-update wiring: Renovate keeps e4-components current with no manual work.
 // Patch/minor releases auto-merge; major bumps open a PR for review. Requires
@@ -469,7 +513,8 @@ files['renovate.json'] = JSON.stringify(
 );
 
 files['.gitignore'] =
-  ['node_modules/', '.expo/', 'dist/', 'web-build/', '*.log', '.DS_Store'].join('\n') + '\n';
+  ['node_modules/', '.expo/', 'dist/', 'web-build/', '*.log', '.DS_Store', '.env'].join('\n') +
+  '\n';
 
 files['README.md'] =
   '# ' + projectName + '\n\n' +
@@ -493,8 +538,9 @@ files['README.md'] =
       '  — an in-memory backend' +
       (withAuth ? ' where every "emailed" code is `123456`' : '') +
       ' — so\n' +
-      '  everything works with zero setup. To go live, replace the clients in\n' +
-      '  `App.tsx` with real adapters that implement the same interfaces.\n'
+      '  everything works with zero setup. To go live on a real backend, follow\n' +
+      '  `supabase/README.md` (~5 minutes) — `lib/backend.ts` switches from mock\n' +
+      '  to Supabase automatically once `.env` is filled in.\n'
     : '') +
   '\n' +
   '## Staying up to date\n\n' +
@@ -519,6 +565,14 @@ for (const [rel, contents] of Object.entries(files)) {
   const full = path.join(targetDir, rel);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, contents);
+}
+
+// Flows come with their backend template: Supabase migrations + edge
+// functions land in the app's supabase/ folder (the Supabase convention),
+// ready for the go-live steps in supabase/README.md.
+if (anyFlow) {
+  const templateDir = path.join(__dirname, '..', 'templates', 'supabase');
+  fs.cpSync(templateDir, path.join(targetDir, 'supabase'), { recursive: true });
 }
 
 console.log('\n  ✓ Created ' + projectName + ' at ' + targetDir + '\n');

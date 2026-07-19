@@ -105,6 +105,7 @@ export const Start: StoryObj = {
     const [accent, setAccent] = useState('#4B7BFF');
     const [parentDir, setParentDir] = useState('~');
     const [flows, setFlows] = useState<Record<string, boolean>>({
+      legal: false,
       auth: false,
       onboarding: false,
       subscription: false,
@@ -133,8 +134,8 @@ export const Start: StoryObj = {
       };
     }, []);
 
-    // Stable gate order: auth → onboarding → subscription → settings.
-    const selectedFlows = ['auth', 'onboarding', 'subscription', 'settings'].filter(
+    // Stable gate order: legal → auth → onboarding → subscription → settings.
+    const selectedFlows = ['legal', 'auth', 'onboarding', 'subscription', 'settings'].filter(
       (f) => flows[f],
     );
     const toggleFlow = (flow: string) => (checked: boolean) =>
@@ -255,9 +256,14 @@ export const Start: StoryObj = {
             ) : null}
             <FormField
               label="Flows"
-              hint="Ready-made journeys composed into the app (auth → onboarding → paywall → home ⇄ settings), running on a mock backend until you connect a real one. Browse them under Flows in the sidebar."
+              hint="Ready-made journeys composed into the app (legal → auth → onboarding → paywall → home ⇄ settings). They run on a mock backend out of the box; the app also gets a supabase/ template and lib/backend.ts that switch to your real Supabase project the moment .env is filled in. Browse the journeys under Flows in the sidebar."
             >
               <Stack gap="sm">
+                <Checkbox
+                  checked={flows.legal}
+                  onChange={toggleFlow('legal')}
+                  label="Legal — first-run terms & privacy consent"
+                />
                 <Checkbox
                   checked={flows.auth}
                   onChange={toggleFlow('auth')}

@@ -134,16 +134,23 @@ Beyond components, the library ships complete journeys — browsable under **Flo
 - **Onboarding** — `OnboardingFlow`: welcome slides, name/avatar capture, permission priming ("ask before the OS asks").
 - **Subscription** — `PaywallScreen` (tier picker, monthly/annual, restore) + `ManageSubscriptionScreen` (status, change plan, inline cancel confirm).
 - **Settings** — `SettingsFlow`: account hub, edit profile, change password/email, notification preferences, subscription entry, sign out, inline delete-account confirm.
+- **Legal** — `LegalConsentScreen` (first-run terms & privacy gate) and `TrackingConsentScreen` (iOS tracking-prompt priming).
+- **Ops** — `ForceUpgradeScreen`, `MaintenanceScreen`, and `OfflineBanner`: prop-driven; your app decides when, these decide how.
 
-Flows never talk to a backend directly. They call the `AuthClient` / `ProfileClient` / `BillingClient` interfaces provided through `FlowServicesProvider`; `createMockClients()` is the zero-setup in-memory implementation (every "emailed" code is `123456`), and real adapters (Supabase, RevenueCat/Stripe) drop in without touching flow code. Screens only read colors/fonts through the theme, so your `theme.ts` restyles every flow while library updates keep flowing in via the semver range + Renovate.
+Flows never talk to a backend directly. They call the `AuthClient` / `ProfileClient` / `BillingClient` interfaces provided through `FlowServicesProvider`. Two implementations ship:
+
+- `createMockClients()` — zero-setup in-memory backend (every "emailed" code is `123456`); powers the Storybook demos and fresh scaffolds.
+- `createSupabaseClients({ supabase })` — real auth + profiles on [Supabase](https://supabase.com); pass in your app's `createClient(url, anonKey)` instance. Billing stays on the mock until you provide a `BillingClient` (RevenueCat for store IAP, Stripe for web).
+
+Screens only read colors/fonts through the theme, so your `theme.ts` restyles every flow while library updates keep flowing in via the semver range + Renovate.
 
 Scaffold with any combination (settings requires auth):
 
 ```sh
-npx github:e4-explore/e4-components my-app --flows auth,onboarding,subscription,settings
+npx github:e4-explore/e4-components my-app --flows legal,auth,onboarding,subscription,settings
 ```
 
-The generated `App.tsx` composes the selected packs gate by gate: auth → onboarding → paywall → home ⇄ settings.
+The generated `App.tsx` composes the selected packs gate by gate — legal → auth → onboarding → paywall → home ⇄ settings — and the app arrives backend-ready: a `supabase/` folder (profiles migration, `delete-account` edge function, go-live README) plus `lib/backend.ts`, which runs the mock until you fill in `.env` with your Supabase project's URL and anon key, then switches automatically.
 
 ## Design principles
 

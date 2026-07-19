@@ -14,7 +14,7 @@ const NAME_RE = /^[a-z0-9][a-z0-9-_]*$/i;
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 // Flow packs the scaffolder understands; must match KNOWN_FLOWS in
 // bin/create-e4-app.js.
-const KNOWN_FLOWS = ['auth', 'onboarding', 'subscription', 'settings'];
+const KNOWN_FLOWS = ['legal', 'auth', 'onboarding', 'subscription', 'settings'];
 
 function isLoopback(req: IncomingMessage): boolean {
   const addr = req.socket.remoteAddress ?? '';
