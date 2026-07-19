@@ -19,13 +19,19 @@ export interface TabBarProps<T extends string> {
   tabs: TabItem<T>[];
   active: T;
   onChange: (key: T) => void;
+  /**
+   * Detach the bar from the screen edges so it reads as a floating card —
+   * inset margins, rounded corners, a border, and a lifted shadow. Defaults
+   * to `true`; pass `false` for the flush, full-bleed look.
+   */
+  floating?: boolean;
 }
 
 /**
  * Tab bar with a sliding ink indicator: the highlight pill springs between
  * tabs rather than teleporting.
  */
-export function TabBar<T extends string>({ tabs, active, onChange }: TabBarProps<T>) {
+export function TabBar<T extends string>({ tabs, active, onChange, floating = true }: TabBarProps<T>) {
   const theme = useTheme();
   const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
   const target = layouts[active];
@@ -41,7 +47,15 @@ export function TabBar<T extends string>({ tabs, active, onChange }: TabBarProps
   }, [target]);
 
   return (
-    <Box bg="surface">
+    <Box
+      bg="surface"
+      mx={floating ? 'md' : undefined}
+      mb={floating ? 'md' : undefined}
+      rounded={floating ? 'lg' : undefined}
+      border={floating ? theme.borders.thick : undefined}
+      borderColor="borderStrong"
+      shadow={floating ? 'lifted' : undefined}
+    >
       <Row gap="none" px="sm" py="sm" style={{ position: 'relative' }}>
         <Animated.View
           style={[
