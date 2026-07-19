@@ -19,6 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       sha: { required: true, type: string }
+      dry-run: { required: false, type: boolean, default: false }
 permissions:
   contents: write
   pull-requests: read
@@ -45,3 +46,4 @@ jobs:
           homepage-url: https://e4-components.vercel.app
           routes: '["/?path=/story/welcome--start"]'
           sha: ${{ github.event.inputs.sha }}
+          dry-run: ${{ github.event.inputs.dry-run }}
