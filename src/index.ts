@@ -23,6 +23,9 @@ export type {
 // Motion
 export { settle, enter, exit } from './motion';
 
+// Overlay
+export { OverlayHost, useOverlay } from './overlay/OverlayHost';
+
 // Icons
 export { Icon } from './icons/Icon';
 export type { IconName, IconProps } from './icons/Icon';

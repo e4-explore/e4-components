@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Preview } from '@storybook/react-native-web-vite';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, ToastProvider, Box, wireframe, wireframeDark } from '../src';
+import { ThemeProvider, ToastProvider, OverlayHost, Box, wireframe, wireframeDark } from '../src';
 import { brandTheme, brandThemeDark } from './brandTheme';
 
 const themesByMode = {
@@ -49,15 +49,17 @@ const preview: Preview = {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider theme={theme}>
             <ToastProvider>
-              <Box
-                bg="background"
-                p="lg"
-                style={{ minHeight: '100vh' as never }}
-              >
-                <Box style={{ maxWidth: 480, width: '100%' as never }}>
-                  <Story />
+              <OverlayHost>
+                <Box
+                  bg="background"
+                  p="lg"
+                  style={{ minHeight: '100vh' as never }}
+                >
+                  <Box style={{ maxWidth: 480, width: '100%' as never }}>
+                    <Story />
+                  </Box>
                 </Box>
-              </Box>
+              </OverlayHost>
             </ToastProvider>
           </ThemeProvider>
         </GestureHandlerRootView>

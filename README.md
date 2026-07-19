@@ -17,7 +17,7 @@ Peer deps: `react`, `react-native`, `react-native-reanimated` (v3.10+ / v4), `re
 
 ```tsx
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider, ToastProvider, Stack, Text, Button } from 'e4-components';
+import { ThemeProvider, ToastProvider, OverlayHost, Stack, Text, Button } from 'e4-components';
 
 export default function App() {
   return (
@@ -25,10 +25,13 @@ export default function App() {
       {/* ThemeProvider is optional — with no theme you get the wireframe look */}
       <ThemeProvider>
         <ToastProvider>
-          <Stack p="lg">
-            <Text variant="title">Hello, wireframe</Text>
-            <Button label="Press me" onPress={() => {}} />
-          </Stack>
+          {/* Required if you use Select — it renders its floating panel here */}
+          <OverlayHost>
+            <Stack p="lg">
+              <Text variant="title">Hello, wireframe</Text>
+              <Button label="Press me" onPress={() => {}} />
+            </Stack>
+          </OverlayHost>
         </ToastProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
@@ -99,17 +102,18 @@ Every component has interactive stories; `Examples/Full screen` shows them compo
 
 - **Primitives** — `Box` (token-aware style props), `Text` (variants), `Stack`/`Row`/`Spacer`, `Pressable` (springy press feedback)
 - **Core** — `Button`, `Card`, `Avatar`, `Badge`, `Divider`
-- **Forms** — `Input`, `TextArea`, `FormField` (animated errors), `Checkbox`, `RadioGroup`, `Switch`, `Select` (expands inline — no modal)
+- **Forms** — `Input`, `TextArea`, `FormField` (animated errors), `Checkbox`, `RadioGroup`, `Switch`, `Select` (floating panel overlays content below the trigger, via `OverlayHost`)
 - **Inline** — `InlineEdit` (tap-to-edit, pixel-stable swap), `Accordion`, `Expandable` (the measured-height spring engine)
 - **Lists & data** — `List`/`ListItem` (animated add/remove), `DraggableList` (long-press lift, spring reorder, edge auto-scroll), `Table`, `EmptyState`, `Skeleton`, `ProgressBar`
 - **App shell** — `Header`, `TabBar` (sliding indicator), `BottomSheet` (pan-to-dismiss), `ToastProvider`/`useToast`
+- **Overlay** — `OverlayHost`/`useOverlay` (measured-position floating panels that escape any ancestor's stacking context — powers Select, available for building your own popovers/tooltips)
 - **Icons** — `Icon` (`chevronLeft/Right/Down`, `check`, `close`, `grip`, `home`, `search`, `chart`, `smile`, `edit`) — built from plain Views (rotated bars, border-corner chevrons, dot grids), not SVG, so no extra native dependency
 - **Motion** — shared spring presets (`snappy` / `gentle` / `bouncy`) and `settle`/`enter`/`exit` layout transitions
 
 ## Design principles
 
 1. **Tokens or nothing** — components never hardcode a visual value.
-2. **Inline over modal** — expand, edit, and add in place; push neighbors with springs, never jump-cut.
+2. **Inline over modal** — expand, edit, and add in place; push neighbors with springs, never jump-cut. (Select's options panel is the exception: it floats over what follows rather than pushing it, like a native dropdown.)
 3. **One motion language** — all animation goes through the theme's spring presets.
 4. **Wireframe is a feature** — `wireframe` stays exported forever; any app can flip into blueprint mode for demos.
 

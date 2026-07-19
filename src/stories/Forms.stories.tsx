@@ -93,7 +93,7 @@ export const InlineSelect: StoryObj = {
     return (
       <Stack>
         <Text variant="caption" color="inkMuted">
-          No modal — options expand in place and push content below out of the way.
+          The options panel floats above the content below it instead of pushing it down.
         </Text>
         <FormField label="Favorite sport">
           <Select
@@ -110,7 +110,7 @@ export const InlineSelect: StoryObj = {
         </FormField>
         <Row>
           <Button label="Content below" variant="secondary" />
-          <Text color="inkMuted">…gets pushed, not covered</Text>
+          <Text color="inkMuted">…gets covered, not pushed</Text>
         </Row>
       </Stack>
     );
