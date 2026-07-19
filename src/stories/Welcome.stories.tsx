@@ -13,6 +13,7 @@ export default meta;
 const SWATCH_LABELS: Partial<Record<string, string>> = { background: 'bg' };
 
 export const Start: StoryObj = {
+  parameters: { options: { showPanel: false } },
   render: () => {
     const theme = useTheme();
     return (
