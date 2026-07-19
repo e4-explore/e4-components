@@ -97,5 +97,3 @@ export { BottomSheet } from './components/BottomSheet';
 export type { BottomSheetProps } from './components/BottomSheet';
 export { ToastProvider, useToast } from './components/Toast';
 export type { ToastTone } from './components/Toast';
-export { Ticket } from './components/Ticket';
-export type { TicketProps } from './components/Ticket';
