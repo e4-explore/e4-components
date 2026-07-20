@@ -1,6 +1,6 @@
 {
   "name": "e4-components",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "E4 base component library — wireframe-styled, token-themed React Native components with best-in-class interactions.",
   "main": "src/index.ts",
   "types": "src/index.ts",
