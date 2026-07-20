@@ -28,6 +28,27 @@ function json(res: ServerResponse, status: number, body: unknown) {
 }
 
 /**
+ * Open the OS's native "choose folder" dialog and resolve to the picked
+ * absolute path — or `null` if the user cancelled. Only macOS is wired up
+ * (via osascript); other platforms resolve to `undefined` so the caller can
+ * tell the user to type the path instead. Local-dev convenience only.
+ */
+function pickDirectory(): Promise<string | null | undefined> {
+  if (process.platform !== 'darwin') return Promise.resolve(undefined);
+  const script =
+    'POSIX path of (choose folder with prompt "Choose where to create your app" ' +
+    'default location (path to home folder))';
+  return new Promise((resolve) => {
+    execFile('osascript', ['-e', script], { timeout: 120000 }, (err, stdout) => {
+      // Cancelling the dialog exits non-zero ("User canceled."); treat as null.
+      if (err) return resolve(null);
+      const picked = stdout.trim().replace(/\/$/, ''); // drop trailing slash
+      resolve(picked || null);
+    });
+  });
+}
+
+/**
  * Dev-only endpoint backing the "Create app" page in Storybook. When the
  * catalog runs locally (`npm run storybook`), POST /api/create-app runs the
  * scaffold CLI on this machine. The deployed static build has no server, so
@@ -36,6 +57,21 @@ function json(res: ServerResponse, status: number, body: unknown) {
 const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => {
   if (!req.url || !req.url.startsWith('/api/create-app')) return next();
   if (!isLoopback(req)) return json(res, 403, { ok: false, error: 'Local requests only' });
+
+  // Native folder picker backing the "Browse…" button next to "Create inside".
+  if (req.url.startsWith('/api/create-app/pick-dir')) {
+    if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'POST only' });
+    pickDirectory().then((picked) => {
+      if (picked === undefined) {
+        return json(res, 200, { ok: false, unsupported: true });
+      }
+      if (picked === null) {
+        return json(res, 200, { ok: false, canceled: true });
+      }
+      return json(res, 200, { ok: true, path: picked });
+    });
+    return;
+  }
 
   if (req.method === 'GET') {
     // Probe used by the page to detect local mode.
