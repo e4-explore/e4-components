@@ -37,11 +37,15 @@ export const Input = React.forwardRef<TextInput, InputProps>(function Input(
     borderColor: invalid
       ? theme.colors.danger
       : focused
-        ? theme.colors.borderStrong
+        ? theme.colors.accent
         : theme.colors.border,
     backgroundColor: disabled ? theme.colors.surfaceAlt : theme.colors.surface,
     opacity: disabled ? 0.6 : 1,
-    ...(focused ? theme.shadows.card : theme.shadows.none),
+    // Focus lift uses the emphasis color for its offset shadow (matching the
+    // accent border) instead of the default ink.
+    ...(focused
+      ? { ...theme.shadows.card, shadowColor: theme.colors.accent }
+      : theme.shadows.none),
   };
 
   const body = theme.typography.variants.body;

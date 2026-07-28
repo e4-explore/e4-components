@@ -144,10 +144,11 @@ export function Select<T extends string>({
         marginTop: theme.spacing.xs,
         borderRadius: theme.radii.md,
         borderWidth: theme.borders.regular,
-        borderColor: theme.colors.borderStrong,
+        borderColor: theme.colors.accent,
         backgroundColor: theme.colors.surface,
         overflow: 'hidden',
         ...theme.shadows.lifted,
+        shadowColor: theme.colors.accent,
       }}
     >
       <Box pt="xs" pb="xs">
@@ -222,11 +223,15 @@ export function Select<T extends string>({
           borderColor: invalid
             ? theme.colors.danger
             : open
-              ? theme.colors.borderStrong
+              ? theme.colors.accent
               : theme.colors.border,
           backgroundColor: theme.colors.surface,
           opacity: disabled ? 0.6 : 1,
-          ...(open ? theme.shadows.card : theme.shadows.none),
+          // Open lift uses the emphasis color for its offset shadow (matching
+          // the accent border) instead of the default ink.
+          ...(open
+            ? { ...theme.shadows.card, shadowColor: theme.colors.accent }
+            : theme.shadows.none),
         }}
       >
         <Pressable
