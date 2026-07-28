@@ -98,7 +98,7 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
           }}
         >
           <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: INK }}>
-            Create an app
+            Create an app locally with this library
           </span>
           <button
             type="button"
