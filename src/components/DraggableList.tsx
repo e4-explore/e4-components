@@ -41,10 +41,13 @@ export interface DraggableListProps<T> {
 
 const AUTOSCROLL_EDGE = 60;
 const AUTOSCROLL_STEP = 14;
-// Extra breathing room above the first row and below the last, so a lifted
-// row's enhanced shadow (and slight scale-up) never gets hard-clipped by the
-// ScrollView's own bounds right at the top/bottom edge.
-const LIFT_MARGIN = 10;
+// Breathing room around the rows so a lifted row's enhanced shadow (and slight
+// scale-up) never gets hard-clipped by the ScrollView's own bounds. Applied on
+// every edge: vertically via the row offset + taller content, horizontally via
+// contentContainer padding. Without the horizontal room the scaled card and its
+// offset shadow spill past the ScrollView's right edge, where `overflow: hidden`
+// slices them off mid-drag.
+const LIFT_MARGIN = 14;
 
 interface RowProps {
   id: string;
@@ -56,7 +59,6 @@ interface RowProps {
   scrollRef: ReturnType<typeof useAnimatedRef<Animated.ScrollView>>;
   activationDelay: number;
   theme: Theme;
-  isActive: boolean;
   setActiveId: (id: string | null) => void;
   commitOrder: (positions: Positions) => void;
   children: React.ReactNode;
@@ -72,7 +74,6 @@ function DraggableRow({
   scrollRef,
   activationDelay,
   theme,
-  isActive,
   setActiveId,
   commitOrder,
   children,
@@ -97,8 +98,13 @@ function DraggableRow({
 
   const moveTo = (y: number) => {
     'worklet';
-    translateY.value = y;
-    const newIndex = Math.max(0, Math.min(count - 1, Math.round((y - LIFT_MARGIN) / rowHeight)));
+    // Keep the lifted row pinned between the first and last slots so it can't be
+    // dragged past the top/bottom of the ScrollView and get clipped by it.
+    const minY = LIFT_MARGIN;
+    const maxY = (count - 1) * rowHeight + LIFT_MARGIN;
+    const clampedY = Math.max(minY, Math.min(maxY, y));
+    translateY.value = clampedY;
+    const newIndex = Math.max(0, Math.min(count - 1, Math.round((clampedY - LIFT_MARGIN) / rowHeight)));
     const current = positions.value[id];
     if (newIndex !== current) {
       // Shift every row between the old and new slot by one (not a swap) so
@@ -162,12 +168,18 @@ function DraggableRow({
         style={[
           {
             position: 'absolute',
-            left: 0,
-            right: 0,
+            // Inset from the ScrollView edges so a lifted row's scale-up and
+            // offset shadow have room to render instead of being clipped by the
+            // container's `overflow: hidden` (react-native-web ignores container
+            // padding for absolutely-positioned children, so inset the row).
+            left: LIFT_MARGIN,
+            right: LIFT_MARGIN,
             top: 0,
             height: rowHeight,
           },
-          isActive ? theme.shadows.lifted : null,
+          // The lift shadow lives on the rendered card (via `isActive`), not this
+          // full-height wrapper — a wrapper shadow reads as a square block offset
+          // below the card. Consumers apply their own rounded, flush lift shadow.
           animatedStyle,
         ]}
       >
@@ -243,7 +255,6 @@ export function DraggableList<T>({
             scrollRef={scrollRef}
             activationDelay={activationDelay}
             theme={theme}
-            isActive={activeId === id}
             setActiveId={setActiveId}
             commitOrder={commitOrder}
           >

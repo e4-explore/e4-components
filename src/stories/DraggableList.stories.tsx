@@ -6,6 +6,7 @@ import { Icon } from '../icons/Icon';
 import { Text } from '../primitives/Text';
 import { Box } from '../primitives/Box';
 import { Stack, Row } from '../primitives/Stack';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface Drill {
   id: string;
@@ -38,6 +39,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {
   render: (args) => {
+    const theme = useTheme();
     const [items, setItems] = useState<Drill[]>([
       { id: 'a', title: 'Warm-up putts', detail: '10 min' },
       { id: 'b', title: 'Driving range', detail: '25 min' },
@@ -57,7 +59,14 @@ export const Playground: Story = {
           onReorder={setItems}
           renderItem={({ item, isActive }) => (
             <Box pb="sm" style={{ height: args.rowHeight }}>
-              <Card flat={!isActive} p="md" style={{ flex: 1, justifyContent: 'center' }}>
+              <Card
+                flat={!isActive}
+                p="md"
+                style={[
+                  { flex: 1, justifyContent: 'center' },
+                  isActive ? theme.shadows.lifted : null,
+                ]}
+              >
                 <Row>
                   <Icon name="grip" size={18} color="inkFaint" />
                   <Box flex={1} ml="sm">
