@@ -6,6 +6,7 @@ export { wireframeDark } from './theme/wireframeDark';
 export { manifest } from './theme/manifest';
 export { manifestDark } from './theme/manifestDark';
 export { wireframeFonts, manifestFonts, systemFonts } from './theme/fonts';
+export { withAlpha } from './theme/color';
 export type {
   Theme,
   ThemeOverride,
