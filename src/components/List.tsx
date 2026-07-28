@@ -1,12 +1,12 @@
 import React from 'react';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box, type BoxProps } from '../primitives/Box';
 import { Text } from '../primitives/Text';
-import { Row, Spacer } from '../primitives/Stack';
+import { Row } from '../primitives/Stack';
 import { Pressable } from '../primitives/Pressable';
 import { Icon } from '../icons/Icon';
-import { settle, enter, exit } from '../motion';
+import { settle } from '../motion';
 
 export interface ListItemProps {
   title: string;
@@ -46,17 +46,32 @@ export function ListItem({ title, subtitle, left, right, chevron, onPress }: Lis
 }
 
 export interface ListProps extends BoxProps {
-  /** Animate item add/remove: rows fade in/collapse out, neighbors glide. */
+  /** Animate item add/remove: rows slide+fade in/out and neighbors glide. */
   animated?: boolean;
 }
 
 /**
  * Bordered list container. Children (usually ListItems) get dividers between
- * them; with `animated`, inline add/remove pushes rows smoothly.
+ * them; with `animated`, inline add/remove slides rows in/out on a spring while
+ * their neighbors glide, so nothing pops in before the rest has settled.
  */
 export function List({ animated = false, children, style, ...rest }: ListProps) {
   const theme = useTheme();
   const items = React.Children.toArray(children);
+  const spring = theme.motion.springs.gentle;
+  // The exit runs on the faster `snappy` spring: a removed row should clear out
+  // ahead of its neighbors' glide, so the collapse leads the reflow instead of
+  // lagging it. The enter stays on `gentle` to move in step with the list.
+  const exitSpring = theme.motion.springs.snappy;
+
+  const rowEnter = FadeInDown.springify()
+    .damping(spring.damping)
+    .stiffness(spring.stiffness)
+    .mass(spring.mass);
+  const rowExit = FadeOutUp.springify()
+    .damping(exitSpring.damping)
+    .stiffness(exitSpring.stiffness)
+    .mass(exitSpring.mass);
 
   return (
     <Box
@@ -87,12 +102,7 @@ export function List({ animated = false, children, style, ...rest }: ListProps) 
         const key = (React.isValidElement(child) && child.key) || index;
         if (!animated) return <React.Fragment key={key}>{wrapped}</React.Fragment>;
         return (
-          <Animated.View
-            key={key}
-            entering={enter}
-            exiting={exit}
-            layout={settle(theme.motion.springs.gentle)}
-          >
+          <Animated.View key={key} entering={rowEnter} exiting={rowExit} layout={settle(spring)}>
             {wrapped}
           </Animated.View>
         );
