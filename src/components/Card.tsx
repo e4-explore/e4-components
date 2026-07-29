@@ -7,7 +7,7 @@ import { Pressable, type PressableProps } from '../primitives/Pressable';
 export interface CardProps extends BoxProps {
   /** Makes the whole card tappable with press feedback. */
   onPress?: PressableProps['onPress'];
-  /** Drop the offset shadow (flat card). */
+  /** Strip the surface to bare content — no shadow, border, or background. */
   flat?: boolean;
 }
 
@@ -16,11 +16,15 @@ export function Card({ onPress, flat = false, children, style, ...rest }: CardPr
   const theme = useTheme();
   const surface: StyleProp<ViewStyle> = [
     {
-      backgroundColor: theme.colors.surface,
-      borderWidth: theme.borders.regular,
-      borderColor: theme.colors.border,
       borderRadius: theme.radii.lg,
-      ...(flat ? null : theme.shadows.card),
+      ...(flat
+        ? { backgroundColor: 'transparent', borderWidth: 0 }
+        : {
+            backgroundColor: theme.colors.surface,
+            borderWidth: theme.borders.regular,
+            borderColor: theme.colors.border,
+            ...theme.shadows.card,
+          }),
     },
     style,
   ];

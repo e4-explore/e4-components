@@ -30,7 +30,7 @@ export const Playground: Story = {
         <Avatar name="Ethan Grove" />
         <Box flex={1}>
           <Text variant="heading">Card title</Text>
-          <Text color="inkMuted">Toggle `flat` in Controls to drop the shadow.</Text>
+          <Text color="inkMuted">Toggle `flat` in Controls to strip the surface to bare content.</Text>
         </Box>
       </Row>
     </Card>
@@ -59,7 +59,7 @@ export const Variants: Story = {
           </Row>
         </Card>
         <Card flat>
-          <Text color="inkMuted">Flat card — border only, no shadow.</Text>
+          <Text color="inkMuted">Flat card — bare content, no surface, border, or shadow.</Text>
         </Card>
       </Stack>
     );
