@@ -57,7 +57,7 @@ export const Playground: Story = {
           data={items}
           keyExtractor={(item) => item.id}
           onReorder={setItems}
-          renderItem={({ item, isActive }) => (
+          renderItem={({ item, index, isActive }) => (
             <Box pb="sm" style={{ height: args.rowHeight }}>
               <Card
                 flat={!isActive}
@@ -79,6 +79,30 @@ export const Playground: Story = {
                   </Text>
                 </Row>
               </Card>
+              {/* Dashed separator sits in the row's bottom gap — only on the
+                  flat rows (a lifted row becomes the surfaced card, which owns
+                  its own edges), and never after the last item. */}
+              {!isActive && index < items.length - 1 ? (
+                <Box
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: theme.spacing.sm,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box
+                    style={{
+                      borderBottomWidth: theme.borders.thin,
+                      borderColor: theme.colors.border,
+                      borderStyle: theme.borders.sketchStyle,
+                      opacity: 0.6,
+                    }}
+                  />
+                </Box>
+              ) : null}
             </Box>
           )}
         />
