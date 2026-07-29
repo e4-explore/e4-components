@@ -34,4 +34,30 @@
       }
     });
   })();
+
+  // Stale-deploy recovery (mirrors preview-head.html). The manager also
+  // lazy-loads content-hashed chunks, so a tab from an earlier deploy can 404
+  // on a chunk whose hash changed. Reload once to pull the fresh manifest,
+  // guarded by a short time window to avoid a reload loop.
+  (function () {
+    var KEY = 'e4:chunk-reload-at';
+    function recover() {
+      var last = 0;
+      try { last = parseInt(sessionStorage.getItem(KEY) || '0', 10); } catch (e) {}
+      if (Date.now() - last < 10000) return;
+      try { sessionStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+      window.location.reload();
+    }
+    window.addEventListener('vite:preloadError', function (event) {
+      if (event && event.preventDefault) event.preventDefault();
+      recover();
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      var reason = event && event.reason;
+      var msg = reason && (reason.message || reason);
+      if (typeof msg === 'string' && /dynamically imported module|module script failed/i.test(msg)) {
+        recover();
+      }
+    });
+  })();
 </script>
