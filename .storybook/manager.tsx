@@ -2,8 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { addons } from 'storybook/manager-api';
+import { SET_GLOBALS, GLOBALS_UPDATED } from 'storybook/internal/core-events';
 import { create } from 'storybook/theming';
 
+const FONT_BASE = "'Shantell Sans', 'Comic Sans MS', cursive";
+const FONT_CODE = "'Menlo', 'Consolas', monospace";
+
+// Light "paper & ink" chrome — matches the preview's wireframe theme.
 const e4Theme = create({
   base: 'light',
   brandTitle: 'e4 Explorebook',
@@ -20,8 +25,8 @@ const e4Theme = create({
   appBorderColor: '#2A2A33',
   appBorderRadius: 12,
 
-  fontBase: "'Shantell Sans', 'Comic Sans MS', cursive",
-  fontCode: "'Menlo', 'Consolas', monospace",
+  fontBase: FONT_BASE,
+  fontCode: FONT_CODE,
 
   textColor: '#2A2A33',
   textMutedColor: '#6E6E78',
@@ -36,14 +41,80 @@ const e4Theme = create({
   inputBorderRadius: 8,
 });
 
-addons.setConfig({
-  theme: e4Theme,
-  sidebar: {
-    // Render the top-level sections (Components, Templates, Flows, …) as
-    // collapsible folders instead of always-open uppercase headers, so they
-    // start closed. The full-app example is auto-expanded below.
-    showRoots: false,
-  },
+// Dark "chalkboard" chrome — mirrors the preview's wireframeDark palette
+// (near-black board, chalk-white ink) so the whole UI goes dark together.
+const e4ThemeDark = create({
+  base: 'dark',
+  brandTitle: 'e4 Explorebook',
+  brandUrl: 'https://github.com/e4-explore',
+  brandImage: 'e4-logo-dark.svg',
+  brandTarget: '_blank',
+
+  colorPrimary: '#F2F2ED',
+  colorSecondary: '#7FA3FF',
+
+  appBg: '#17171B',
+  appContentBg: '#17171B',
+  appPreviewBg: '#17171B',
+  appBorderColor: '#F2F2ED',
+  appBorderRadius: 12,
+
+  fontBase: FONT_BASE,
+  fontCode: FONT_CODE,
+
+  textColor: '#F2F2ED',
+  textMutedColor: '#B7B7C0',
+  barBg: '#17171B',
+  barTextColor: '#B7B7C0',
+  barSelectedColor: '#F2F2ED',
+  barHoverColor: '#7FA3FF',
+
+  inputBg: '#1F2024',
+  inputBorder: '#F2F2ED',
+  inputTextColor: '#F2F2ED',
+  inputBorderRadius: 8,
+});
+
+const sidebarConfig = {
+  // Render the top-level sections (Components, Templates, Flows, …) as
+  // collapsible folders instead of always-open uppercase headers, so they
+  // start closed. The full-app example is auto-expanded below.
+  showRoots: false,
+};
+
+// Seed the boot theme (light). `setConfig` is applied once at manager load and
+// isn't reactive, so runtime mode switching goes through the live `api` below.
+addons.setConfig({ theme: e4Theme, sidebar: sidebarConfig });
+
+// Keep the manager chrome's theme in lock-step with the preview's `mode`
+// global, so flipping to Dark takes the whole site — sidebar, toolbar, and
+// canvas — dark together (not just the story canvas). `api.setOptions({ theme })`
+// (unlike `addons.setConfig`) re-themes the chrome reactively.
+addons.register('e4/theme-sync', (api) => {
+  let currentMode: 'light' | 'dark' | null = null;
+  const applyMode = (mode: unknown) => {
+    const next = mode === 'dark' ? 'dark' : 'light';
+    if (next === currentMode) return;
+    currentMode = next;
+    api.setOptions({ theme: next === 'dark' ? e4ThemeDark : e4Theme });
+  };
+
+  const channel = api.getChannel();
+  // SET_GLOBALS carries the initial globals on load (covers a deep link like
+  // `?globals=mode:dark`); GLOBALS_UPDATED fires on every later toolbar change.
+  channel?.on(SET_GLOBALS, ({ globals }: { globals?: Record<string, unknown> }) =>
+    applyMode(globals?.mode),
+  );
+  channel?.on(GLOBALS_UPDATED, ({ globals }: { globals?: Record<string, unknown> }) =>
+    applyMode(globals?.mode),
+  );
+  // Belt-and-suspenders: if globals were already set before this registered,
+  // reconcile once against the current value.
+  try {
+    applyMode((api.getGlobals?.() as Record<string, unknown> | undefined)?.mode);
+  } catch {
+    /* getGlobals not ready yet — the channel events cover it */
+  }
 });
 
 // Wireframe tokens, inlined: the manager runs outside the RN-web ThemeProvider,

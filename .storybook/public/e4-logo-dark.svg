@@ -1,0 +1,18 @@
+<svg width="290" height="64" viewBox="0 0 290 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="e4 Explorebook">
+  <!-- chalk-dust glow behind the badge (dark "chalkboard" companion of the light logo) -->
+  <rect x="9" y="13" width="62" height="46" rx="11" fill="#F2F2ED" opacity="0.28" />
+  <!-- badge on the board -->
+  <rect x="4" y="8" width="62" height="46" rx="11" fill="#1F2024" stroke="#F2F2ED" stroke-width="2.5" />
+  <!-- hand-drawn lowercase "e" (open loop + crossbar, sitting in the x-height) -->
+  <g stroke="#F2F2ED" stroke-width="3.2" stroke-linecap="round" fill="none">
+    <path d="M30 30 Q29 22 21 21 Q13 20.5 12 29.5 Q11 38.5 20 41.5 Q27 43 29.5 37" />
+    <path d="M13 29.5 Q21 28.6 29 29.5" />
+    <!-- hand-drawn "4" -->
+    <path d="M49 19 Q43.5 27.5 39 34.6 L56 34.2" />
+    <path d="M51.5 20 Q51.8 31 52 45" />
+  </g>
+  <!-- wordmark -->
+  <text x="78" y="44" font-family="'Shantell Sans','Comic Sans MS','Chalkboard SE',cursive" font-size="27" font-weight="700" letter-spacing="0.2" fill="#F2F2ED">Explorebook</text>
+  <!-- sketchy underline -->
+  <path d="M79 53 Q160 55 249 52.5" stroke="#63636C" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 6" fill="none" />
+</svg>
