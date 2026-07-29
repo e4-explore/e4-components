@@ -536,7 +536,7 @@ function ReviewSummary({
   flows: string[];
 }) {
   return (
-    <Card flat>
+    <Card flat style={{ borderWidth: 0 }}>
       <Stack gap="md">
         <Row justify="space-between" align="center">
           <Text color="inkMuted">App name</Text>
@@ -721,7 +721,7 @@ export const Start: StoryObj = {
 
         {/* Step 1 — Basics: name, colors, (local) target folder. */}
         {step === 0 ? (
-          <Card flat>
+          <Card flat style={{ borderWidth: 0 }}>
             <Stack gap="md">
               <FormField label="App name" error={nameError} hint="Becomes the folder and Expo slug">
                 <Input
@@ -776,7 +776,7 @@ export const Start: StoryObj = {
 
         {/* Step 2 — Flows: optional ready-made journeys. */}
         {step === 1 ? (
-          <Card flat>
+          <Card flat style={{ borderWidth: 0 }}>
             <FormField
               label="Flows"
               hint="Ready-made journeys composed into the app (legal → auth → onboarding → paywall → home ⇄ settings). They run on a mock backend out of the box; the app also gets a supabase/ template and lib/backend.ts that switch to your real Supabase project the moment .env is filled in. Browse the journeys under Flows in the sidebar."
