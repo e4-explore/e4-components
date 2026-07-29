@@ -265,9 +265,37 @@ function bootstrapExamplesExpansion() {
   }, 150);
 }
 
+/**
+ * The sidebar's "Find components" search is a downshift combobox: the real
+ * <input id="storybook-explorer-searchfield"> is wrapped in a
+ * <div role="combobox"> whose only accessible name comes from an
+ * `aria-labelledby` pointing at a visually-hidden label. Tools that read a
+ * field's name from its own attributes — placeholder, aria-label, text — rather
+ * than resolving that reference (our auto-poster's deterministic search-jump
+ * among them) see the wrapper as unnamed and can't match it as "the search
+ * box." Stamp a plain `aria-label` on both the wrapper and the input so the
+ * accessible name is legible without following the indirection. Idempotent, and
+ * re-applied on sidebar re-renders alongside the Create-app slot.
+ */
+function ensureSearchLabel() {
+  const SEARCH_LABEL = 'Search components';
+  const input = document.getElementById('storybook-explorer-searchfield');
+  if (input && input.getAttribute('aria-label') !== SEARCH_LABEL) {
+    input.setAttribute('aria-label', SEARCH_LABEL);
+  }
+  const combobox = input?.closest('[role="combobox"]');
+  if (combobox && combobox.getAttribute('aria-label') !== SEARCH_LABEL) {
+    combobox.setAttribute('aria-label', SEARCH_LABEL);
+  }
+}
+
 function bootstrapSidebarButton() {
   ensureMounted();
-  const observer = new MutationObserver(() => ensureMounted());
+  ensureSearchLabel();
+  const observer = new MutationObserver(() => {
+    ensureMounted();
+    ensureSearchLabel();
+  });
   const region = document.getElementById('storybook-sidebar-region') ?? document.body;
   observer.observe(region, { childList: true, subtree: true });
   bootstrapExamplesExpansion();
