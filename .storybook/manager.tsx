@@ -86,17 +86,24 @@ const sidebarConfig = {
 // isn't reactive, so runtime mode switching goes through the live `api` below.
 addons.setConfig({ theme: e4Theme, sidebar: sidebarConfig });
 
+// The live color scheme, mirrored from the preview's `mode` global and shared
+// with the DOM-injected Create-app UI below (which lives outside Storybook's
+// React tree, so it can't read globals through the usual hooks).
+type Mode = 'light' | 'dark';
+let currentMode: Mode = 'light';
+const modeListeners = new Set<(mode: Mode) => void>();
+
 // Keep the manager chrome's theme in lock-step with the preview's `mode`
 // global, so flipping to Dark takes the whole site — sidebar, toolbar, and
 // canvas — dark together (not just the story canvas). `api.setOptions({ theme })`
 // (unlike `addons.setConfig`) re-themes the chrome reactively.
 addons.register('e4/theme-sync', (api) => {
-  let currentMode: 'light' | 'dark' | null = null;
   const applyMode = (mode: unknown) => {
-    const next = mode === 'dark' ? 'dark' : 'light';
+    const next: Mode = mode === 'dark' ? 'dark' : 'light';
     if (next === currentMode) return;
     currentMode = next;
     api.setOptions({ theme: next === 'dark' ? e4ThemeDark : e4Theme });
+    modeListeners.forEach((listener) => listener(next));
   };
 
   const channel = api.getChannel();
@@ -117,18 +124,62 @@ addons.register('e4/theme-sync', (api) => {
   }
 });
 
-// Wireframe tokens, inlined: the manager runs outside the RN-web ThemeProvider,
-// so it can't read the theme object the preview uses.
-const INK = '#2A2A33';
-const PAPER = '#FAFAF7';
-const PRIMARY = '#3B44D9';
+// Wireframe/chalkboard tokens, inlined: the manager runs outside the RN-web
+// ThemeProvider, so it can't read the theme object the preview uses. Each mode
+// mirrors the matching preview palette (wireframe / wireframeDark).
 const FONT = "'Shantell Sans', 'Comic Sans MS', cursive";
+const PALETTE: Record<Mode, {
+  ink: string;
+  paper: string;
+  primary: string;
+  onPrimary: string;
+  overlay: string;
+  shadowInk: string;
+}> = {
+  light: {
+    ink: '#2A2A33',
+    paper: '#FAFAF7',
+    primary: '#3B44D9',
+    onPrimary: '#FFFFFF',
+    overlay: 'rgba(42, 42, 51, 0.45)',
+    shadowInk: '#2A2A33',
+  },
+  dark: {
+    ink: '#F2F2ED',
+    paper: '#1F2024',
+    primary: '#4C7EFF',
+    onPrimary: '#FFFFFF',
+    overlay: 'rgba(0, 0, 0, 0.6)',
+    // A chalk-dust glow instead of a hard cast shadow, matching the dark logo.
+    shadowInk: 'rgba(242, 242, 237, 0.22)',
+  },
+};
 
-// The Create-app form story, loaded in isolation. Pinning globals keeps the
-// modal on the wireframe theme regardless of the toolbar's current selection.
-const FORM_URL = 'iframe.html?id=create-app--start&viewMode=story&globals=theme:wireframe;mode:light';
+// Subscribe a component to the live color scheme. Reads the current value on
+// mount (it may have been set before this mounted) and re-renders on change.
+function useMode(): Mode {
+  const [mode, setMode] = useState<Mode>(currentMode);
+  useEffect(() => {
+    setMode(currentMode);
+    const listener = (next: Mode) => setMode(next);
+    modeListeners.add(listener);
+    return () => {
+      modeListeners.delete(listener);
+    };
+  }, []);
+  return mode;
+}
+
+// The Create-app form story, loaded in isolation. Pin the theme to wireframe
+// (the form is designed for it) but follow the current `mode` — pinning
+// `mode:light` here would clobber the session's shared globals and yank the
+// whole catalog back to light, and would render the modal light in dark mode.
+const formUrl = (mode: Mode) =>
+  `iframe.html?id=create-app--start&viewMode=story&globals=theme:wireframe;mode:${mode}`;
 
 function CreateAppModal({ onClose }: { onClose: () => void }) {
+  const mode = useMode();
+  const c = PALETTE[mode];
   return (
     <div
       onClick={onClose}
@@ -136,7 +187,7 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
         position: 'fixed',
         inset: 0,
         zIndex: 2147483000,
-        background: 'rgba(42, 42, 51, 0.45)',
+        background: c.overlay,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -151,10 +202,10 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
           flexDirection: 'column',
           width: 'min(720px, 94vw)',
           height: 'min(760px, 86vh)',
-          background: PAPER,
-          border: `2px solid ${INK}`,
+          background: c.paper,
+          border: `2px solid ${c.ink}`,
           borderRadius: 16,
-          boxShadow: `6px 6px 0 ${INK}`,
+          boxShadow: `6px 6px 0 ${c.shadowInk}`,
           overflow: 'hidden',
         }}
       >
@@ -164,11 +215,11 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '14px 18px',
-            borderBottom: `2px solid ${INK}`,
+            borderBottom: `2px solid ${c.ink}`,
             flex: '0 0 auto',
           }}
         >
-          <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: INK }}>
+          <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 18, color: c.ink }}>
             Create an app locally with this library
           </span>
           <button
@@ -183,7 +234,7 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
               justifyContent: 'center',
               fontSize: 18,
               lineHeight: 1,
-              color: INK,
+              color: c.ink,
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -194,8 +245,8 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
         </div>
         <iframe
           title="Create an app locally"
-          src={FORM_URL}
-          style={{ flex: '1 1 auto', width: '100%', border: 'none', background: PAPER }}
+          src={formUrl(mode)}
+          style={{ flex: '1 1 auto', width: '100%', border: 'none', background: c.paper }}
         />
       </div>
     </div>
@@ -205,6 +256,8 @@ function CreateAppModal({ onClose }: { onClose: () => void }) {
 function CreateAppLauncher() {
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
+  const mode = useMode();
+  const c = PALETTE[mode];
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
@@ -229,12 +282,12 @@ function CreateAppLauncher() {
           fontFamily: FONT,
           fontWeight: 700,
           fontSize: 15,
-          color: '#FFFFFF',
-          background: PRIMARY,
-          border: `2px solid ${INK}`,
+          color: c.onPrimary,
+          background: c.primary,
+          border: `2px solid ${c.ink}`,
           borderRadius: 10,
           // Hard offset shadow that "presses" on hover — the wireframe feel.
-          boxShadow: hover ? `1px 1px 0 ${INK}` : `3px 3px 0 ${INK}`,
+          boxShadow: hover ? `1px 1px 0 ${c.shadowInk}` : `3px 3px 0 ${c.shadowInk}`,
           transform: hover ? 'translate(2px, 2px)' : 'none',
           transition: 'box-shadow 80ms ease, transform 80ms ease',
           cursor: 'pointer',
