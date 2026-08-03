@@ -52,7 +52,7 @@ jobs:
           x-access-token: ${{ secrets.X_ACCESS_TOKEN }}
           x-access-token-secret: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           homepage-url: https://e4-components.vercel.app
-          routes: '["/?path=/story/components-icon--gallery&globals=theme:manifest"]'
+          routes: '["/?path=/story/welcome--start"]'
           sha: ${{ github.event.inputs.sha }}
           before-sha: ${{ github.event.inputs.before-sha || github.event.before }}
           dry-run: ${{ github.event.inputs.dry-run }}
