@@ -15,6 +15,9 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 // Flow packs the scaffolder understands; must match KNOWN_FLOWS in
 // bin/create-e4-app.js.
 const KNOWN_FLOWS = ['legal', 'auth', 'onboarding', 'subscription', 'settings'];
+// Base themes the scaffolder understands; must match KNOWN_THEMES in
+// bin/create-e4-app.js and the wizard's theme picker.
+const KNOWN_THEMES = ['wireframe', 'ledger'];
 
 function isLoopback(req: IncomingMessage): boolean {
   const addr = req.socket.remoteAddress ?? '';
@@ -91,6 +94,7 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
         primary?: string;
         accent?: string;
         flows?: string[];
+        theme?: string;
       };
       try {
         body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -115,6 +119,10 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
         }
       }
 
+      if (body.theme && !KNOWN_THEMES.includes(body.theme)) {
+        return json(res, 400, { ok: false, error: `Unknown theme "${body.theme}".` });
+      }
+
       let parentDir = (body.parentDir ?? '~').trim() || '~';
       if (parentDir === '~' || parentDir.startsWith('~/')) {
         parentDir = path.join(os.homedir(), parentDir.slice(1));
@@ -129,6 +137,7 @@ const createAppEndpoint = (): Connect.NextHandleFunction => (req, res, next) => 
       if (body.primary) args.push('--primary', body.primary);
       if (body.accent) args.push('--accent', body.accent);
       if (flows.length > 0) args.push('--flows', flows.join(','));
+      if (body.theme && body.theme !== 'wireframe') args.push('--theme', body.theme);
 
       execFile(process.execPath, args, { cwd: parentDir, timeout: 15000 }, (err, stdout, stderr) => {
         if (err) {

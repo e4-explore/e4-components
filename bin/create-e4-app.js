@@ -40,7 +40,12 @@ const argv = process.argv.slice(2);
 const positional = [];
 const flags = {};
 for (let i = 0; i < argv.length; i++) {
-  if (argv[i] === '--primary' || argv[i] === '--accent' || argv[i] === '--flows') {
+  if (
+    argv[i] === '--primary' ||
+    argv[i] === '--accent' ||
+    argv[i] === '--flows' ||
+    argv[i] === '--theme'
+  ) {
     flags[argv[i].slice(2)] = argv[i + 1];
     i++;
   } else {
@@ -90,6 +95,35 @@ if (withSettings && !withAuth) {
 }
 const anyFlow = selectedFlows.length > 0;
 
+// Base theme the app ships in. `wireframe` (default) is the hand-drawn look;
+// `ledger` maps to the library's `manifest` theme (dense JetBrains Mono,
+// hairline rules, flat cream paper, uppercase labels). Must match KNOWN_THEMES
+// in .storybook/main.ts and the wizard's theme picker.
+const KNOWN_THEMES = ['wireframe', 'ledger'];
+const themeChoice = (flags.theme || 'wireframe').trim().toLowerCase();
+if (!KNOWN_THEMES.includes(themeChoice)) {
+  fail('Unknown theme "' + themeChoice + '". Available: ' + KNOWN_THEMES.join(', '));
+}
+const isLedger = themeChoice === 'ledger';
+
+// Each base theme renders in its own font face, so the scaffold must load the
+// matching @expo-google-fonts package (see src/theme/fonts.ts).
+const font = isLedger
+  ? {
+      pkg: '@expo-google-fonts/jetbrains-mono',
+      regular: 'JetBrainsMono_400Regular',
+      medium: 'JetBrainsMono_500Medium',
+      bold: 'JetBrainsMono_700Bold',
+      label: 'JetBrains Mono',
+    }
+  : {
+      pkg: '@expo-google-fonts/shantell-sans',
+      regular: 'ShantellSans_400Regular',
+      medium: 'ShantellSans_500Medium',
+      bold: 'ShantellSans_700Bold',
+      label: 'Shantell Sans',
+    };
+
 const targetDir = path.resolve(process.cwd(), projectName);
 if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
   fail('Directory "' + projectName + '" already exists and is not empty.');
@@ -115,7 +149,7 @@ files['package.json'] = JSON.stringify(
     },
     dependencies: {
       'e4-components': GITHUB_DEP,
-      '@expo-google-fonts/shantell-sans': '^0.2.3',
+      [font.pkg]: '^0.2.3',
       // Only referenced by lib/backend.ts once real env vars exist, but
       // installed up front so going live is config-only.
       ...(anyFlow ? { '@supabase/supabase-js': '^2.45.0' } : {}),
@@ -127,6 +161,9 @@ files['package.json'] = JSON.stringify(
       'react-native-gesture-handler': '~2.16.1',
       'react-native-reanimated': '~3.10.1',
       'react-native-safe-area-context': '4.10.5',
+      // e4-components renders its icons (and the Ledger theme's Carbon set)
+      // through react-native-svg — a peer dependency of the library.
+      'react-native-svg': '15.2.0',
     },
     devDependencies: {
       '@babel/core': '^7.24.0',
@@ -184,19 +221,34 @@ files['index.ts'] =
   "import App from './App';\n\n" +
   'registerRootComponent(App);\n';
 
-files['theme.ts'] =
-  "import { createTheme } from 'e4-components';\n\n" +
-  '// Start from the wireframe base and override only what you want to brand.\n' +
-  '// As written the app still looks like an intentional wireframe. When you\n' +
-  "// want a real-product look, set borders.sketchStyle to 'solid' and swap the\n" +
-  '// fonts (systemFonts) here.\n' +
-  'export const theme = createTheme({\n' +
-  "  name: '" + projectName + "',\n" +
-  '  colors: {\n' +
-  "    primary: '" + primaryColor + "',\n" +
-  "    accent: '" + accentColor + "',\n" +
-  '  },\n' +
-  '});\n';
+files['theme.ts'] = isLedger
+  ? "import { createTheme, manifest } from 'e4-components';\n\n" +
+    '// Start from the Ledger base (manifest): dense JetBrains Mono, hairline\n' +
+    '// rules, flat cream paper, and uppercase labels. Override only what you\n' +
+    '// want to brand — everything else inherits. Pass a different base as the\n' +
+    '// second argument (e.g. the wireframe default) to switch the whole look.\n' +
+    'export const theme = createTheme(\n' +
+    '  {\n' +
+    "    name: '" + projectName + "',\n" +
+    '    colors: {\n' +
+    "      primary: '" + primaryColor + "',\n" +
+    "      accent: '" + accentColor + "',\n" +
+    '    },\n' +
+    '  },\n' +
+    '  manifest,\n' +
+    ');\n'
+  : "import { createTheme } from 'e4-components';\n\n" +
+    '// Start from the wireframe base and override only what you want to brand.\n' +
+    '// As written the app still looks like an intentional wireframe. When you\n' +
+    "// want a real-product look, set borders.sketchStyle to 'solid' and swap the\n" +
+    '// fonts (systemFonts) here.\n' +
+    'export const theme = createTheme({\n' +
+    "  name: '" + projectName + "',\n" +
+    '  colors: {\n' +
+    "    primary: '" + primaryColor + "',\n" +
+    "    accent: '" + accentColor + "',\n" +
+    '  },\n' +
+    '});\n';
 
 // ---- App.tsx assembly ------------------------------------------------------
 // The selected flow packs compose into one skeleton, gate by gate:
@@ -413,9 +465,9 @@ const providersInner = anyFlow
 const appBody =
   'export default function App() {\n' +
   '  const [fontsLoaded] = useFonts({\n' +
-  '    ShantellSans_400Regular,\n' +
-  '    ShantellSans_500Medium,\n' +
-  '    ShantellSans_700Bold,\n' +
+  '    ' + font.regular + ',\n' +
+  '    ' + font.medium + ',\n' +
+  '    ' + font.bold + ',\n' +
   '  });\n' +
   stateLines.join('\n') +
   (stateLines.length > 0 ? '\n' : '') +
@@ -444,10 +496,10 @@ files['App.tsx'] =
   "import { StatusBar } from 'expo-status-bar';\n" +
   "import {\n" +
   "  useFonts,\n" +
-  "  ShantellSans_400Regular,\n" +
-  "  ShantellSans_500Medium,\n" +
-  "  ShantellSans_700Bold,\n" +
-  "} from '@expo-google-fonts/shantell-sans';\n" +
+  "  " + font.regular + ",\n" +
+  "  " + font.medium + ",\n" +
+  "  " + font.bold + ",\n" +
+  "} from '" + font.pkg + "';\n" +
   "import {\n" +
   libImports.map((name) => '  ' + name + ',\n').join('') +
   "} from 'e4-components';\n" +
@@ -528,8 +580,8 @@ files['README.md'] =
   'Press `i` for iOS simulator, `a` for Android, or `w` for web.\n\n' +
   '## What is wired up\n\n' +
   '- `App.tsx` — providers in order: `GestureHandlerRootView` → `SafeAreaProvider`\n' +
-  '  → `ThemeProvider` → `ToastProvider` → `OverlayHost`, plus Shantell Sans font\n' +
-  '  loading (the wireframe face) with a loading spinner until fonts are ready.\n' +
+  '  → `ThemeProvider` → `ToastProvider` → `OverlayHost`, plus ' + font.label + ' font\n' +
+  '  loading (the ' + themeChoice + ' theme face) with a loading spinner until fonts are ready.\n' +
   '- `theme.ts` — your project theme. Override tokens here; every component\n' +
   '  re-skins from it. See the library README for the full token list.\n' +
   (anyFlow

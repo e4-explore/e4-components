@@ -12,6 +12,7 @@ import { Divider } from '../components/Divider';
 import { Input } from '../components/Input';
 import { FormField } from '../components/FormField';
 import { Checkbox } from '../components/Checkbox';
+import { Select } from '../components/Select';
 import { Button } from '../components/Button';
 import { Icon } from '../icons/Icon';
 import { useToast } from '../components/Toast';
@@ -43,6 +44,12 @@ type Mode = 'probing' | 'local' | 'static';
 
 const STEPS = ['Basics', 'Flows', 'Review'] as const;
 
+type ThemeChoice = 'wireframe' | 'ledger';
+const THEME_LABELS: Record<ThemeChoice, string> = {
+  wireframe: 'Wireframe',
+  ledger: 'Ledger',
+};
+
 const FLOW_LABELS: Record<string, string> = {
   legal: 'Legal',
   auth: 'Auth',
@@ -51,11 +58,18 @@ const FLOW_LABELS: Record<string, string> = {
   settings: 'Settings',
 };
 
-function buildCommands(name: string, primary: string, accent: string, flows: string[]): string {
+function buildCommands(
+  name: string,
+  primary: string,
+  accent: string,
+  flows: string[],
+  themeChoice: ThemeChoice,
+): string {
   const flags =
     (primary && primary !== '#3355D9' ? ` --primary "${primary}"` : '') +
     (accent && accent !== '#4B7BFF' ? ` --accent "${accent}"` : '') +
-    (flows.length > 0 ? ` --flows ${flows.join(',')}` : '');
+    (flows.length > 0 ? ` --flows ${flows.join(',')}` : '') +
+    (themeChoice !== 'wireframe' ? ` --theme ${themeChoice}` : '');
   return [
     `npx github:e4-explore/e4-components ${name || 'my-app'}${flags}`,
     `cd ${name || 'my-app'}`,
@@ -529,11 +543,13 @@ function ReviewSummary({
   primary,
   accent,
   flows,
+  themeChoice,
 }: {
   name: string;
   primary: string;
   accent: string;
   flows: string[];
+  themeChoice: ThemeChoice;
 }) {
   return (
     <Card flat>
@@ -541,6 +557,11 @@ function ReviewSummary({
         <Row justify="space-between" align="center">
           <Text color="inkMuted">App name</Text>
           <Text>{name || 'my-app'}</Text>
+        </Row>
+        <Divider />
+        <Row justify="space-between" align="center">
+          <Text color="inkMuted">Theme</Text>
+          <Text>{THEME_LABELS[themeChoice]}</Text>
         </Row>
         <Divider />
         <Row justify="space-between" align="center">
@@ -578,6 +599,7 @@ export const Start: StoryObj = {
     const [name, setName] = useState('');
     const [primary, setPrimary] = useState('#3355D9');
     const [accent, setAccent] = useState('#4B7BFF');
+    const [themeChoice, setThemeChoice] = useState<ThemeChoice>('wireframe');
     const [parentDir, setParentDir] = useState('~');
     const [flows, setFlows] = useState<Record<string, boolean>>({
       legal: false,
@@ -656,7 +678,7 @@ export const Start: StoryObj = {
         const res = await fetch('/api/create-app', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, parentDir, primary, accent, flows: selectedFlows }),
+          body: JSON.stringify({ name, parentDir, primary, accent, flows: selectedFlows, theme: themeChoice }),
         });
         const body = await res.json();
         if (body.ok) {
@@ -754,6 +776,19 @@ export const Start: StoryObj = {
                   </FormField>
                 </Box>
               </Row>
+              <FormField
+                label="Theme"
+                hint="The look your app ships in. Preview both live via the toolbar's Apply theme control."
+              >
+                <Select
+                  value={themeChoice}
+                  onChange={setThemeChoice}
+                  options={[
+                    { value: 'wireframe', label: 'Wireframe — hand-drawn Shantell Sans' },
+                    { value: 'ledger', label: 'Ledger — dense JetBrains Mono' },
+                  ]}
+                />
+              </FormField>
               {mode === 'local' ? (
                 <FormField label="Create inside" hint="Folder on this machine — ~ is your home folder">
                   <Row gap="sm" align="center">
@@ -815,11 +850,17 @@ export const Start: StoryObj = {
         {/* Step 3 — Review: recap + create (local) or copy-&-run commands (static). */}
         {step === 2 ? (
           <Stack gap="md">
-            <ReviewSummary name={name} primary={primary} accent={accent} flows={selectedFlows} />
+            <ReviewSummary
+              name={name}
+              primary={primary}
+              accent={accent}
+              flows={selectedFlows}
+              themeChoice={themeChoice}
+            />
             {mode !== 'local' ? (
               <Stack gap="sm">
                 <Divider label="run these in your terminal" />
-                <CommandBlock commands={buildCommands(name, primary, accent, selectedFlows)} />
+                <CommandBlock commands={buildCommands(name, primary, accent, selectedFlows, themeChoice)} />
                 <Text variant="caption" color="inkFaint">
                   Tip: run the first command from the folder where you keep projects (not inside
                   another repo). Then press i for iOS, a for Android, or w for web.

@@ -51,8 +51,11 @@ jobs:
           x-api-secret: ${{ secrets.X_API_SECRET }}
           x-access-token: ${{ secrets.X_ACCESS_TOKEN }}
           x-access-token-secret: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          # Unlocks the paid pre-post optimizer (@e4/post-scorer-pro). Without
+          # this secret the free scorer still logs the score + weak spots.
+          post-scorer-license-key: ${{ secrets.POST_SCORER_LICENSE_KEY }}
           homepage-url: https://e4-components.vercel.app
-          routes: '["/?path=/story/welcome--start"]'
+          routes: '["/iframe.html?id=create-app--start&viewMode=story"]'
           sha: ${{ github.event.inputs.sha }}
           before-sha: ${{ github.event.inputs.before-sha || github.event.before }}
           dry-run: ${{ github.event.inputs.dry-run }}
