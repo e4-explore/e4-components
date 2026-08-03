@@ -7,13 +7,16 @@
  *   npx github:e4-explore/e4-components my-app
  *   # optionally bake brand colors into the generated theme.ts:
  *   npx github:e4-explore/e4-components my-app --primary "#3355D9" --accent "#4B7BFF"
+ *   # pick the base look: wireframe (default) or ledger:
+ *   npx github:e4-explore/e4-components my-app --theme ledger
  *   # or, once cloned locally:
  *   node bin/create-e4-app.js my-app
  *
  * Produces a runnable Expo project with the providers already in place
  * (GestureHandlerRootView → ThemeProvider → ToastProvider → OverlayHost),
- * a starter theme.ts, Shantell Sans font loading, and a demo screen built
- * entirely from the library.
+ * a starter theme.ts, the chosen theme's font loading (Shantell Sans for
+ * wireframe, JetBrains Mono for ledger), react-native-svg wired up for the
+ * icon set, and a demo screen built entirely from the library.
  */
 
 const fs = require('fs');
