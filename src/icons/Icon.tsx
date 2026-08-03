@@ -1,5 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../theme/ThemeProvider';
 import { resolveColor, type ColorValue } from '../primitives/Box';
 
@@ -33,6 +34,12 @@ export interface IconProps {
 export function Icon({ name, size = 18, color = 'ink' }: IconProps) {
   const theme = useTheme();
   const resolved = resolveColor(theme, color) ?? theme.colors.ink;
+  // Ledger (the manifest theme) swaps the hand-drawn set for the crisp Carbon
+  // Design System glyphs — a better fit for its ledger/ticket aesthetic. Every
+  // other theme keeps the wireframe glyphs drawn from plain Views below.
+  if (theme.name === 'manifest') {
+    return <CarbonGlyph name={name} size={size} color={resolved} />;
+  }
   switch (name) {
     case 'chevronLeft':
       return <Chevron size={size} color={resolved} direction="left" />;
@@ -57,6 +64,55 @@ export function Icon({ name, size = 18, color = 'ink' }: IconProps) {
     case 'edit':
       return <Edit size={size} color={resolved} />;
   }
+}
+
+// Carbon Design System glyphs (Apache-2.0, sourced from @carbon/icons on a
+// 32×32 grid), used by the Ledger theme via <CarbonGlyph>. Each entry is the
+// icon's raw SVG path data — one string per <path>.
+// https://carbondesignsystem.com/elements/icons/library
+const CARBON_PATHS: Record<IconName, string[]> = {
+  chevronLeft: ['M10 16 20 6 21.4 7.4 12.8 16 21.4 24.6 20 26z'],
+  chevronRight: ['M22 16 12 26 10.6 24.6 19.2 16 10.6 7.4 12 6z'],
+  chevronDown: ['M16 22 6 12 7.4 10.6 16 19.2 24.6 10.6 26 12z'],
+  check: ['M13 24 4 15 5.414 13.586 13 21.171 26.586 7.586 28 9 13 24z'],
+  close: [
+    'M17.4141 16 24 9.4141 22.5859 8 16 14.5859 9.4143 8 8 9.4141 14.5859 16 8 22.5859 9.4143 24 16 17.4141 22.5859 24 24 22.5859 17.4141 16z',
+  ],
+  grip: [
+    'M10 6H14V10H10z',
+    'M18 6H22V10H18z',
+    'M10 14H14V18H10z',
+    'M18 14H22V18H18z',
+    'M10 22H14V26H10z',
+    'M18 22H22V26H18z',
+  ],
+  home: [
+    'M16.6123,2.2138a1.01,1.01,0,0,0-1.2427,0L1,13.4194l1.2427,1.5717L4,13.6209V26a2.0041,2.0041,0,0,0,2,2H26a2.0037,2.0037,0,0,0,2-2V13.63L29.7573,15,31,13.4282ZM18,26H14V18h4Zm2,0V18a2.0023,2.0023,0,0,0-2-2H14a2.002,2.002,0,0,0-2,2v8H6V12.0615l10-7.79,10,7.8005V26Z',
+  ],
+  search: [
+    'M29,27.5859l-7.5521-7.5521a11.0177,11.0177,0,1,0-1.4141,1.4141L27.5859,29ZM4,13a9,9,0,1,1,9,9A9.01,9.01,0,0,1,4,13Z',
+  ],
+  chart: ['M27,28V6H19V28H15V14H7V28H4V2H2V28a2,2,0,0,0,2,2H30V28ZM13,28H9V16h4Zm12,0H21V8h4Z'],
+  smile: [
+    'M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2Zm0,26A12,12,0,1,1,28,16,12,12,0,0,1,16,28Z',
+    'M11.5,11A2.5,2.5,0,1,0,14,13.5,2.48,2.48,0,0,0,11.5,11Z',
+    'M20.5,11A2.5,2.5,0,1,0,23,13.5,2.48,2.48,0,0,0,20.5,11Z',
+    'M16,24a8,8,0,0,0,6.85-3.89l-1.71-1a6,6,0,0,1-10.28,0l-1.71,1A8,8,0,0,0,16,24Z',
+  ],
+  edit: [
+    'M2 26H30V28H2z',
+    'M25.4,9c0.8-0.8,0.8-2,0-2.8c0,0,0,0,0,0l-3.6-3.6c-0.8-0.8-2-0.8-2.8,0c0,0,0,0,0,0l-15,15V24h6.4L25.4,9z M20.4,4L24,7.6 l-3,3L17.4,7L20.4,4z M6,22v-3.6l10-10l3.6,3.6l-10,10H6z',
+  ],
+};
+
+function CarbonGlyph({ name, size, color }: { name: IconName; size: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 32 32">
+      {CARBON_PATHS[name].map((d, i) => (
+        <Path key={i} d={d} fill={color} />
+      ))}
+    </Svg>
+  );
 }
 
 const ROTATE: Record<'left' | 'right' | 'down' | 'up', string> = {
