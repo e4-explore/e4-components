@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
   TextInput,
+  StyleSheet,
   type TextInputProps,
   type ViewStyle,
   type StyleProp,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { Row } from '../primitives/Stack';
+import { GlassSurface } from '../primitives/GlassSurface';
 
 export interface InputProps extends TextInputProps {
   /** Optional adornments (glyphs, buttons). */
@@ -28,6 +30,7 @@ export const Input = React.forwardRef<TextInput, InputProps>(function Input(
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const disabled = editable === false;
+  const glass = !!theme.material;
 
   const container: ViewStyle = {
     minHeight: 46,
@@ -39,7 +42,8 @@ export const Input = React.forwardRef<TextInput, InputProps>(function Input(
       : focused
         ? theme.colors.accent
         : theme.colors.border,
-    backgroundColor: disabled ? theme.colors.surfaceAlt : theme.colors.surface,
+    // Glass paints the fill via the backdrop below; flat themes fill directly.
+    backgroundColor: glass ? 'transparent' : disabled ? theme.colors.surfaceAlt : theme.colors.surface,
     opacity: disabled ? 0.6 : 1,
     // Focus lift uses the emphasis color for its offset shadow (matching the
     // accent border) instead of the default ink.
@@ -51,6 +55,14 @@ export const Input = React.forwardRef<TextInput, InputProps>(function Input(
   const body = theme.typography.variants.body;
   return (
     <Row gap="sm" style={[container, containerStyle]}>
+      {glass ? (
+        <GlassSurface
+          intensity="thin"
+          highlight={false}
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { borderRadius: theme.radii.md }]}
+        />
+      ) : null}
       {left}
       <TextInput
         ref={ref}

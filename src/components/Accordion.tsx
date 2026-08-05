@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeProvider';
 import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Expandable } from './Expandable';
 import { Icon } from '../icons/Icon';
 
@@ -50,12 +52,17 @@ export function Accordion({ items, multiple = false, defaultOpen = [] }: Accordi
     });
   };
 
+  const glass = !!theme.material;
+
   return (
     <Box
       rounded="lg"
-      bg="surface"
+      bg={glass ? undefined : 'surface'}
       style={{ borderWidth: theme.borders.regular, borderColor: theme.colors.border, overflow: 'hidden' }}
     >
+      {glass ? (
+        <GlassSurface highlight={false} pointerEvents="none" style={StyleSheet.absoluteFill} />
+      ) : null}
       {items.map((item, index) => {
         const open = openKeys.includes(item.key);
         return (

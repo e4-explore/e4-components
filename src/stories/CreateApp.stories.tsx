@@ -44,10 +44,11 @@ type Mode = 'probing' | 'local' | 'static';
 
 const STEPS = ['Basics', 'Flows', 'Review'] as const;
 
-type ThemeChoice = 'wireframe' | 'ledger';
+type ThemeChoice = 'wireframe' | 'ledger' | 'glass';
 const THEME_LABELS: Record<ThemeChoice, string> = {
   wireframe: 'Wireframe',
   ledger: 'Ledger',
+  glass: 'Glass',
 };
 
 const FLOW_LABELS: Record<string, string> = {
@@ -786,6 +787,7 @@ export const Start: StoryObj = {
                   options={[
                     { value: 'wireframe', label: 'Wireframe — hand-drawn Shantell Sans' },
                     { value: 'ledger', label: 'Ledger — dense JetBrains Mono' },
+                    { value: 'glass', label: 'Glass — Apple-style frosted, system font' },
                   ]}
                 />
               </FormField>

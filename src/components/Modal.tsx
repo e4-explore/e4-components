@@ -6,7 +6,19 @@ import { Box } from '../primitives/Box';
 import { Row } from '../primitives/Stack';
 import { Text } from '../primitives/Text';
 import { Pressable } from '../primitives/Pressable';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Icon } from '../icons/Icon';
+
+/** Blurred glass dialog fill on glass themes; passthrough otherwise. */
+function GlassPanel({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  if (!theme.material) return <>{children}</>;
+  return (
+    <GlassSurface intensity="thick" style={{ borderRadius: theme.radii.lg, overflow: 'hidden' }}>
+      {children}
+    </GlassSurface>
+  );
+}
 
 export interface ModalProps {
   open: boolean;
@@ -63,25 +75,33 @@ export function Modal({ open, onClose, title, maxWidth = 480, children }: ModalP
             width: '90%',
             maxWidth,
             maxHeight: '85%',
-            backgroundColor: theme.colors.surface,
             borderRadius: theme.radii.lg,
-            borderWidth: theme.borders.regular,
-            borderColor: theme.colors.border,
+            // Glass themes paint the fill + edge via GlassSurface below, and
+            // float on a soft shadow; flat themes keep their bordered surface.
+            ...(theme.material
+              ? theme.shadows.card
+              : {
+                  backgroundColor: theme.colors.surface,
+                  borderWidth: theme.borders.regular,
+                  borderColor: theme.colors.border,
+                }),
           },
           panelStyle,
         ]}
       >
-        {title ? (
-          <Row p="lg" pb="md" align="center" justify="space-between">
-            <Text variant="heading">{title}</Text>
-            <Pressable onPress={onClose} accessibilityLabel="Close" hitSlop={8}>
-              <Icon name="close" size={18} />
-            </Pressable>
-          </Row>
-        ) : null}
-        <Box p="lg" pt={title ? undefined : 'lg'} style={{ flexShrink: 1 }}>
-          {children}
-        </Box>
+        <GlassPanel>
+          {title ? (
+            <Row p="lg" pb="md" align="center" justify="space-between">
+              <Text variant="heading">{title}</Text>
+              <Pressable onPress={onClose} accessibilityLabel="Close" hitSlop={8}>
+                <Icon name="close" size={18} />
+              </Pressable>
+            </Row>
+          ) : null}
+          <Box p="lg" pt={title ? undefined : 'lg'} style={{ flexShrink: 1 }}>
+            {children}
+          </Box>
+        </GlassPanel>
       </Animated.View>
     </Box>
   );

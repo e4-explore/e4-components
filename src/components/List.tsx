@@ -1,10 +1,12 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box, type BoxProps } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Pressable } from '../primitives/Pressable';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Icon } from '../icons/Icon';
 import { settle } from '../motion';
 
@@ -73,9 +75,11 @@ export function List({ animated = false, children, style, ...rest }: ListProps) 
     .stiffness(exitSpring.stiffness)
     .mass(exitSpring.mass);
 
+  const glass = !!theme.material;
+
   return (
     <Box
-      bg="surface"
+      bg={glass ? undefined : 'surface'}
       rounded="lg"
       style={[
         {
@@ -87,6 +91,9 @@ export function List({ animated = false, children, style, ...rest }: ListProps) 
       ]}
       {...rest}
     >
+      {glass ? (
+        <GlassSurface highlight={false} pointerEvents="none" style={StyleSheet.absoluteFill} />
+      ) : null}
       {items.map((child, index) => {
         const wrapped = (
           <Box

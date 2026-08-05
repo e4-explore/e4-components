@@ -3,6 +3,7 @@ import type { ViewStyle, StyleProp } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box, type BoxProps } from '../primitives/Box';
 import { Pressable, type PressableProps } from '../primitives/Pressable';
+import { GlassSurface } from '../primitives/GlassSurface';
 
 export interface CardProps extends BoxProps {
   /** Makes the whole card tappable with press feedback. */
@@ -11,9 +12,38 @@ export interface CardProps extends BoxProps {
   flat?: boolean;
 }
 
-/** Bordered surface with the wireframe's hard offset shadow. */
+/**
+ * Bordered surface. On flat themes it's the wireframe's hard offset shadow; on
+ * a glass theme (`theme.material` present) it renders as a translucent,
+ * blurred glass panel via `<GlassSurface>`.
+ */
 export function Card({ onPress, flat = false, children, style, ...rest }: CardProps) {
   const theme = useTheme();
+
+  // Glass path: the soft shadow lives on an outer wrapper (the blur clips its
+  // own children), the GlassSurface carries the radius + blur + specular edge.
+  if (theme.material && !flat) {
+    const glass = (
+      <GlassSurface style={{ borderRadius: theme.radii.lg }}>
+        <Box p="md" {...rest}>
+          {children}
+        </Box>
+      </GlassSurface>
+    );
+    const outer: StyleProp<ViewStyle> = [
+      { borderRadius: theme.radii.lg, ...theme.shadows.card },
+      style,
+    ];
+    if (onPress) {
+      return (
+        <Pressable accessibilityRole="button" onPress={onPress} style={outer}>
+          {glass}
+        </Pressable>
+      );
+    }
+    return <Box style={outer}>{glass}</Box>;
+  }
+
   const surface: StyleProp<ViewStyle> = [
     {
       borderRadius: theme.radii.lg,

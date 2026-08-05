@@ -10,6 +10,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
+import { GlassSurface } from '../primitives/GlassSurface';
+
+/**
+ * Wraps the sheet body in a blurred glass panel on glass themes (top corners
+ * rounded, thick blur for a heavy over-content sheet); a passthrough otherwise.
+ */
+function SheetPanel({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  if (!theme.material) return <>{children}</>;
+  return (
+    <GlassSurface
+      intensity="thick"
+      style={{
+        borderTopLeftRadius: theme.radii.lg,
+        borderTopRightRadius: theme.radii.lg,
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </GlassSurface>
+  );
+}
 
 export interface BottomSheetProps {
   open: boolean;
@@ -107,26 +129,30 @@ export function BottomSheet({ open, onClose, onClosed, children }: BottomSheetPr
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: theme.colors.surface,
               borderTopLeftRadius: theme.radii.lg,
               borderTopRightRadius: theme.radii.lg,
-              borderWidth: theme.borders.regular,
-              borderBottomWidth: 0,
-              borderColor: theme.colors.border,
+              // On glass, the GlassSurface below paints the fill + edge; on flat
+              // themes the panel is a solid bordered surface.
+              ...(theme.material
+                ? {}
+                : {
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: theme.borders.regular,
+                    borderBottomWidth: 0,
+                    borderColor: theme.colors.border,
+                  }),
             },
             sheetStyle,
           ]}
         >
-          <Box align="center" pt="sm">
-            <Box
-              bg="inkFaint"
-              rounded="pill"
-              style={{ width: 44, height: 5 }}
-            />
-          </Box>
-          <Box p="lg" pb="xl">
-            {children}
-          </Box>
+          <SheetPanel>
+            <Box align="center" pt="sm">
+              <Box bg="inkFaint" rounded="pill" style={{ width: 44, height: 5 }} />
+            </Box>
+            <Box p="lg" pb="xl">
+              {children}
+            </Box>
+          </SheetPanel>
         </Animated.View>
       </GestureDetector>
     </Box>

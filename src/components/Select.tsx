@@ -12,6 +12,7 @@ import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Icon } from '../icons/Icon';
 import { useOverlay } from '../overlay/OverlayHost';
 import { BottomSheet } from './BottomSheet';
@@ -145,12 +146,15 @@ export function Select<T extends string>({
         borderRadius: theme.radii.md,
         borderWidth: theme.borders.regular,
         borderColor: theme.colors.accent,
-        backgroundColor: theme.colors.surface,
+        backgroundColor: theme.material ? 'transparent' : theme.colors.surface,
         overflow: 'hidden',
         ...theme.shadows.lifted,
         shadowColor: theme.colors.accent,
       }}
     >
+      {theme.material ? (
+        <GlassSurface intensity="thick" highlight={false} pointerEvents="none" style={StyleSheet.absoluteFill} />
+      ) : null}
       <Box pt="xs" pb="xs">
         {options.map((option) => {
           const isSelected = option.value === value;
@@ -225,8 +229,11 @@ export function Select<T extends string>({
             : open
               ? theme.colors.accent
               : theme.colors.border,
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.material ? 'transparent' : theme.colors.surface,
           opacity: disabled ? 0.6 : 1,
+          // Clip the glass backdrop to the rounded corners (glass only, so the
+          // flat themes' offset open-lift shadow isn't clipped).
+          ...(theme.material ? { overflow: 'hidden' as const } : null),
           // Open lift uses the emphasis color for its offset shadow (matching
           // the accent border) instead of the default ink.
           ...(open
@@ -234,6 +241,9 @@ export function Select<T extends string>({
             : theme.shadows.none),
         }}
       >
+        {theme.material ? (
+          <GlassSurface intensity="thin" highlight={false} pointerEvents="none" style={StyleSheet.absoluteFill} />
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: open, disabled }}

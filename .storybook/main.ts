@@ -17,7 +17,7 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const KNOWN_FLOWS = ['legal', 'auth', 'onboarding', 'subscription', 'settings'];
 // Base themes the scaffolder understands; must match KNOWN_THEMES in
 // bin/create-e4-app.js and the wizard's theme picker.
-const KNOWN_THEMES = ['wireframe', 'ledger'];
+const KNOWN_THEMES = ['wireframe', 'ledger', 'glass'];
 
 function isLoopback(req: IncomingMessage): boolean {
   const addr = req.socket.remoteAddress ?? '';

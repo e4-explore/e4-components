@@ -6,6 +6,7 @@ import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
 import { Box } from '../primitives/Box';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Icon, type IconName } from '../icons/Icon';
 
 export interface TabItem<T extends string> {
@@ -46,17 +47,8 @@ export function TabBar<T extends string>({ tabs, active, onChange, floating = tr
     };
   }, [target]);
 
-  return (
-    <Box
-      bg="surface"
-      mx={floating ? 'md' : undefined}
-      mb={floating ? 'md' : undefined}
-      rounded={floating ? 'lg' : undefined}
-      border={floating ? theme.borders.thick : undefined}
-      borderColor="borderStrong"
-      shadow={floating ? 'lifted' : undefined}
-    >
-      <Row gap="none" px="sm" py="sm" style={{ position: 'relative' }}>
+  const bar = (
+    <Row gap="none" px="sm" py="sm" style={{ position: 'relative' }}>
         <Animated.View
           style={[
             {
@@ -99,7 +91,31 @@ export function TabBar<T extends string>({ tabs, active, onChange, floating = tr
             </Pressable>
           );
         })}
-      </Row>
+    </Row>
+  );
+
+  // Glass floating bar: a blurred, translucent pill that hovers over content.
+  if (floating && theme.material) {
+    return (
+      <Box mx="md" mb="md" style={{ borderRadius: theme.radii.lg, ...theme.shadows.lifted }}>
+        <GlassSurface style={{ borderRadius: theme.radii.lg, overflow: 'hidden' }}>
+          {bar}
+        </GlassSurface>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      bg="surface"
+      mx={floating ? 'md' : undefined}
+      mb={floating ? 'md' : undefined}
+      rounded={floating ? 'lg' : undefined}
+      border={floating ? theme.borders.thick : undefined}
+      borderColor="borderStrong"
+      shadow={floating ? 'lifted' : undefined}
+    >
+      {bar}
     </Box>
   );
 }

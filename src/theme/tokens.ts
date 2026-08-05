@@ -123,6 +123,43 @@ export interface ThemeMotion {
   };
 }
 
+/**
+ * "Glass" material recipe — the extra ingredients a translucent, Apple-style
+ * theme needs that flat tokens can't express. **Optional**: themes without a
+ * `material` block render as ordinary opaque surfaces, so adding this is
+ * non-breaking for every existing theme.
+ *
+ * Consumed by `<GlassSurface>` (and the components that opt into it): the
+ * backdrop is blurred, the `tint` is painted over it, `saturation` makes the
+ * colors behind pop, and a hairline `highlight` reads as a specular edge.
+ * When real blur is unavailable — old browsers, native without expo-blur, or
+ * the user's Reduce Transparency setting — the opaque `fallback` fill is used
+ * instead, so text stays legible.
+ */
+export interface ThemeMaterial {
+  /** Backdrop blur radius (px on web / dp on native) per surface weight. */
+  blur: {
+    thin: number;
+    regular: number;
+    thick: number;
+  };
+  /** Translucent tint painted over the blurred backdrop. */
+  tint: string;
+  /**
+   * Opaque-ish fill used when blur can't render (Reduce Transparency, old
+   * browsers, native without expo-blur). Must pass text-contrast on its own.
+   */
+  fallback: string;
+  /** Bright specular edge highlight (low-alpha rgba). */
+  highlight: string;
+  /** Width of the specular highlight border. */
+  highlightWidth: number;
+  /** Backdrop saturation multiplier (web `saturate()`), makes hues behind pop. */
+  saturation: number;
+  /** `tint` prop passed to expo-blur's BlurView on native. */
+  nativeTint: 'light' | 'dark' | 'default';
+}
+
 export interface Theme {
   /** Name shown in tooling; also lets components branch on dark vs light if needed. */
   name: string;
@@ -134,6 +171,11 @@ export interface Theme {
   typography: ThemeTypography;
   shadows: ThemeShadows;
   motion: ThemeMotion;
+  /**
+   * Translucent "glass" material recipe. Present only on glass-style themes;
+   * when absent, glass-aware components render as ordinary opaque surfaces.
+   */
+  material?: ThemeMaterial;
 }
 
 /** Deep-partial of Theme, accepted by createTheme() for per-project overrides. */

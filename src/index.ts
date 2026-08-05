@@ -5,6 +5,8 @@ export { wireframe } from './theme/wireframe';
 export { wireframeDark } from './theme/wireframeDark';
 export { manifest } from './theme/manifest';
 export { manifestDark } from './theme/manifestDark';
+export { glass } from './theme/glass';
+export { glassDark } from './theme/glassDark';
 export { wireframeFonts, manifestFonts, systemFonts } from './theme/fonts';
 export { withAlpha } from './theme/color';
 export type {
@@ -17,6 +19,7 @@ export type {
   ThemeTypography,
   ThemeShadows,
   ThemeMotion,
+  ThemeMaterial,
   TextVariant,
   TextVariantName,
   FontFace,
@@ -48,6 +51,8 @@ export { Stack, Row, Spacer } from './primitives/Stack';
 export type { StackProps } from './primitives/Stack';
 export { Pressable } from './primitives/Pressable';
 export type { PressableProps } from './primitives/Pressable';
+export { GlassSurface, registerGlassBlur } from './primitives/GlassSurface';
+export type { GlassSurfaceProps } from './primitives/GlassSurface';
 export { DismissKeyboard } from './primitives/DismissKeyboard';
 export type { DismissKeyboardProps } from './primitives/DismissKeyboard';
 

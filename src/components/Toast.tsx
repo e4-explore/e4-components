@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
+import { GlassSurface } from '../primitives/GlassSurface';
 import { Icon, type IconName } from '../icons/Icon';
 import { settle } from '../motion';
 
@@ -49,11 +50,17 @@ function ToastCard({ toast }: { toast: ToastRecord }) {
         gap="sm"
         px="md"
         py="sm"
-        bg="surface"
+        bg={theme.material ? undefined : 'surface'}
         rounded="md"
         shadow="card"
         style={{ borderWidth: theme.borders.regular, borderColor: theme.colors.border }}
       >
+        {theme.material ? (
+          <GlassSurface
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { borderRadius: theme.radii.md }]}
+          />
+        ) : null}
         <Icon name={TONE_ICON[toast.tone]} size={16} color={toneColor} />
         <Text variant="label">{toast.message}</Text>
       </Row>

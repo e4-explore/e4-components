@@ -102,30 +102,36 @@ const anyFlow = selectedFlows.length > 0;
 // `ledger` maps to the library's `manifest` theme (dense JetBrains Mono,
 // hairline rules, flat cream paper, uppercase labels). Must match KNOWN_THEMES
 // in .storybook/main.ts and the wizard's theme picker.
-const KNOWN_THEMES = ['wireframe', 'ledger'];
+const KNOWN_THEMES = ['wireframe', 'ledger', 'glass'];
 const themeChoice = (flags.theme || 'wireframe').trim().toLowerCase();
 if (!KNOWN_THEMES.includes(themeChoice)) {
   fail('Unknown theme "' + themeChoice + '". Available: ' + KNOWN_THEMES.join(', '));
 }
 const isLedger = themeChoice === 'ledger';
+// Glass rides the system font stack (SF Pro on Apple platforms) — no custom
+// webfont to load — and opts into native backdrop blur via expo-blur.
+const isGlass = themeChoice === 'glass';
 
-// Each base theme renders in its own font face, so the scaffold must load the
-// matching @expo-google-fonts package (see src/theme/fonts.ts).
-const font = isLedger
-  ? {
-      pkg: '@expo-google-fonts/jetbrains-mono',
-      regular: 'JetBrainsMono_400Regular',
-      medium: 'JetBrainsMono_500Medium',
-      bold: 'JetBrainsMono_700Bold',
-      label: 'JetBrains Mono',
-    }
-  : {
-      pkg: '@expo-google-fonts/shantell-sans',
-      regular: 'ShantellSans_400Regular',
-      medium: 'ShantellSans_500Medium',
-      bold: 'ShantellSans_700Bold',
-      label: 'Shantell Sans',
-    };
+// Wireframe and Ledger each ship a custom face, so the scaffold loads the
+// matching @expo-google-fonts package (see src/theme/fonts.ts). Glass uses the
+// built-in system stack, so it has no font package and no load gate.
+const font = isGlass
+  ? { system: true, pkg: null, label: 'the system font (SF Pro on Apple platforms)' }
+  : isLedger
+    ? {
+        pkg: '@expo-google-fonts/jetbrains-mono',
+        regular: 'JetBrainsMono_400Regular',
+        medium: 'JetBrainsMono_500Medium',
+        bold: 'JetBrainsMono_700Bold',
+        label: 'JetBrains Mono',
+      }
+    : {
+        pkg: '@expo-google-fonts/shantell-sans',
+        regular: 'ShantellSans_400Regular',
+        medium: 'ShantellSans_500Medium',
+        bold: 'ShantellSans_700Bold',
+        label: 'Shantell Sans',
+      };
 
 const targetDir = path.resolve(process.cwd(), projectName);
 if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
@@ -152,7 +158,9 @@ files['package.json'] = JSON.stringify(
     },
     dependencies: {
       'e4-components': GITHUB_DEP,
-      [font.pkg]: '^0.2.3',
+      ...(font.pkg ? { [font.pkg]: '^0.2.3' } : {}),
+      // Glass renders real native backdrop blur through expo-blur.
+      ...(isGlass ? { 'expo-blur': '~13.0.2' } : {}),
       // Only referenced by lib/backend.ts once real env vars exist, but
       // installed up front so going live is config-only.
       ...(anyFlow ? { '@supabase/supabase-js': '^2.45.0' } : {}),
@@ -224,7 +232,24 @@ files['index.ts'] =
   "import App from './App';\n\n" +
   'registerRootComponent(App);\n';
 
-files['theme.ts'] = isLedger
+files['theme.ts'] = isGlass
+  ? "import { createTheme, glass } from 'e4-components';\n\n" +
+    '// Start from the Glass base (Apple Liquid Glass–inspired): translucent,\n' +
+    '// blurred surfaces, a specular edge, the system (SF Pro) face, and soft\n' +
+    '// shadows. Override only what you want to brand — everything else inherits.\n' +
+    '// Glass needs something behind it to refract: give your screens a photo or\n' +
+    "// gradient background. Native blur is wired up in App.tsx via expo-blur.\n" +
+    'export const theme = createTheme(\n' +
+    '  {\n' +
+    "    name: '" + projectName + "',\n" +
+    '    colors: {\n' +
+    "      primary: '" + primaryColor + "',\n" +
+    "      accent: '" + accentColor + "',\n" +
+    '    },\n' +
+    '  },\n' +
+    '  glass,\n' +
+    ');\n'
+  : isLedger
   ? "import { createTheme, manifest } from 'e4-components';\n\n" +
     '// Start from the Ledger base (manifest): dense JetBrains Mono, hairline\n' +
     '// rules, flat cream paper, and uppercase labels. Override only what you\n' +
@@ -335,6 +360,7 @@ const libImports = [
   'ThemeProvider',
   'ToastProvider',
   'OverlayHost',
+  ...(isGlass ? ['registerGlassBlur'] : []),
   'Stack',
   ...(withAuth ? ['Row', 'Spacer'] : []),
   'Text',
@@ -465,13 +491,18 @@ const providersInner = anyFlow
   ? indent('<FlowServicesProvider clients={clients}>', 14) + '\n' + safeArea + '\n' + indent('</FlowServicesProvider>', 14)
   : safeArea;
 
+const fontsHook = font.system
+  ? '  // System font stack — nothing to load, so the app renders immediately.\n' +
+    '  const fontsLoaded = true;\n'
+  : '  const [fontsLoaded] = useFonts({\n' +
+    '    ' + font.regular + ',\n' +
+    '    ' + font.medium + ',\n' +
+    '    ' + font.bold + ',\n' +
+    '  });\n';
+
 const appBody =
   'export default function App() {\n' +
-  '  const [fontsLoaded] = useFonts({\n' +
-  '    ' + font.regular + ',\n' +
-  '    ' + font.medium + ',\n' +
-  '    ' + font.bold + ',\n' +
-  '  });\n' +
+  fontsHook +
   stateLines.join('\n') +
   (stateLines.length > 0 ? '\n' : '') +
   '\n' +
@@ -497,16 +528,20 @@ files['App.tsx'] =
   "import { GestureHandlerRootView } from 'react-native-gesture-handler';\n" +
   "import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';\n" +
   "import { StatusBar } from 'expo-status-bar';\n" +
-  "import {\n" +
-  "  useFonts,\n" +
-  "  " + font.regular + ",\n" +
-  "  " + font.medium + ",\n" +
-  "  " + font.bold + ",\n" +
-  "} from '" + font.pkg + "';\n" +
+  (font.system
+    ? "import { BlurView } from 'expo-blur';\n"
+    : "import {\n" +
+      "  useFonts,\n" +
+      "  " + font.regular + ",\n" +
+      "  " + font.medium + ",\n" +
+      "  " + font.bold + ",\n" +
+      "} from '" + font.pkg + "';\n") +
   "import {\n" +
   libImports.map((name) => '  ' + name + ',\n').join('') +
   "} from 'e4-components';\n" +
   "import { theme } from './theme';\n" +
+  // Wire real native backdrop blur into the glass theme, once, at module load.
+  (isGlass ? 'registerGlassBlur(BlurView);\n' : '') +
   (anyFlow ? "import { clients } from './lib/backend';\n" : '') +
   '\n' +
   homeComponent +

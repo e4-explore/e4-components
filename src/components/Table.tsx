@@ -1,9 +1,10 @@
 import React from 'react';
-import type { TextStyle } from 'react-native';
+import { StyleSheet, type TextStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { Box } from '../primitives/Box';
 import { Text } from '../primitives/Text';
 import { Row } from '../primitives/Stack';
+import { GlassSurface } from '../primitives/GlassSurface';
 
 export interface TableColumn<T> {
   key: string;
@@ -26,10 +27,11 @@ export function Table<T extends Record<string, unknown>>({
   keyExtractor,
 }: TableProps<T>) {
   const theme = useTheme();
+  const glass = !!theme.material;
 
   return (
     <Box
-      bg="surface"
+      bg={glass ? undefined : 'surface'}
       rounded="md"
       style={{
         borderWidth: theme.borders.regular,
@@ -37,7 +39,10 @@ export function Table<T extends Record<string, unknown>>({
         overflow: 'hidden',
       }}
     >
-      <Row bg="surfaceAlt" px="md" py="sm" gap="sm">
+      {glass ? (
+        <GlassSurface highlight={false} pointerEvents="none" style={StyleSheet.absoluteFill} />
+      ) : null}
+      <Row bg={glass ? undefined : 'surfaceAlt'} px="md" py="sm" gap="sm">
         {columns.map((col) => (
           <Box key={col.key} flex={col.flex ?? 1}>
             <Text variant="caption" weight="bold" color="inkMuted" align={col.align}>
